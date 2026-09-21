@@ -1,3 +1,4 @@
+import './styles/global.css';
 import './app/barker-app.js';
 
 const root = document.querySelector('barker-app');
