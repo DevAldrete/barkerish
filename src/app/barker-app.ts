@@ -1,9 +1,12 @@
 import { css, html, nothing } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { createDiagram, createRelationship, createRelationshipEnd } from '../domain/model.js';
+import { createRepository } from '../persistence/create-repository.js';
 import { addEntity } from '../store/actions.js';
+import { DocumentManager } from '../store/document-manager.js';
 import { EditorStore } from '../store/editor-store.js';
 import { StoreElement } from '../ui/store-element.js';
+import '../ui/diagram-list.js';
 import '../ui/erd-canvas.js';
 import '../ui/erd-toolbar.js';
 import '../ui/entity-inspector.js';
@@ -28,6 +31,11 @@ export class BarkerApp extends StoreElement {
       display: flex;
       flex: 1;
       min-height: 0;
+    }
+
+    .documents {
+      width: 14rem;
+      flex-shrink: 0;
     }
 
     .workspace {
@@ -74,9 +82,26 @@ export class BarkerApp extends StoreElement {
   /** undefined = not connecting, null = picking source, string = picking target. */
   @state() private connectFrom: string | null | undefined = undefined;
 
+  readonly #manager: DocumentManager;
+
   constructor() {
     super();
     this.store = new EditorStore(createDiagram('Untitled Diagram'));
+    this.#manager = new DocumentManager(this.store, createRepository());
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.#manager.addEventListener('change', this.#onManagerChange);
+    void this.#manager.init().catch((error: unknown) => {
+      console.error('Failed to initialise document storage', error);
+    });
+  }
+
+  override disconnectedCallback(): void {
+    this.#manager.removeEventListener('change', this.#onManagerChange);
+    this.#manager.dispose();
+    super.disconnectedCallback();
   }
 
   override render() {
@@ -112,6 +137,15 @@ export class BarkerApp extends StoreElement {
           @rename-commit=${() => this.store.endInteraction()}
         ></erd-toolbar>
         <div class="body">
+          <aside class="documents">
+            <diagram-list
+              .diagrams=${this.#manager.diagrams}
+              .currentId=${this.#manager.currentId}
+              @create=${() => this.#manager.create()}
+              @open=${(event: CustomEvent<string>) => this.#manager.open(event.detail)}
+              @delete=${(event: CustomEvent<string>) => this.#manager.remove(event.detail)}
+            ></diagram-list>
+          </aside>
           <main class="workspace">
             <erd-canvas
               .store=${this.store}
@@ -119,10 +153,18 @@ export class BarkerApp extends StoreElement {
               @entity-pick=${this.#onEntityPick}
               @connect-cancel=${this.#cancelConnect}
             ></erd-canvas>
-            ${this.connectFrom === undefined ? nothing : html`<div class="hint">${this.#hintText()}</div>`}
+            ${
+              this.connectFrom === undefined
+                ? nothing
+                : html`<div class="hint">${this.#hintText()}</div>`
+            }
           </main>
           <aside class="sidebar">
-            ${selection === null ? html`<p class="empty">Select an entity or relationship to edit it.</p>` : nothing}
+            ${
+              selection === null
+                ? html`<p class="empty">Select an entity or relationship to edit it.</p>`
+                : nothing
+            }
             <entity-inspector .store=${this.store}></entity-inspector>
             <relationship-inspector .store=${this.store}></relationship-inspector>
           </aside>
@@ -130,6 +172,10 @@ export class BarkerApp extends StoreElement {
       </div>
     `;
   }
+
+  #onManagerChange = (): void => {
+    this.requestUpdate();
+  };
 
   #hintText(): string {
     return this.connectFrom === null ? 'Select the source entity' : 'Select the target entity';
