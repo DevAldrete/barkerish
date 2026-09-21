@@ -84,18 +84,28 @@ export function applyCommand(diagram: Diagram, command: Command): Diagram {
       });
 
     case 'UpdateAttribute':
-      return updateEntity(diagram, command.entityId, (entity) => ({
-        ...entity,
-        attributes: entity.attributes.map((attribute) =>
-          attribute.id === command.attributeId ? { ...attribute, ...command.patch } : attribute,
-        ),
-      }));
+      return updateEntity(diagram, command.entityId, (entity) => {
+        if (!entity.attributes.some((attribute) => attribute.id === command.attributeId)) {
+          return entity;
+        }
+        return {
+          ...entity,
+          attributes: entity.attributes.map((attribute) =>
+            attribute.id === command.attributeId ? { ...attribute, ...command.patch } : attribute,
+          ),
+        };
+      });
 
     case 'DeleteAttribute':
-      return updateEntity(diagram, command.entityId, (entity) => ({
-        ...entity,
-        attributes: entity.attributes.filter((attribute) => attribute.id !== command.attributeId),
-      }));
+      return updateEntity(diagram, command.entityId, (entity) => {
+        if (!entity.attributes.some((attribute) => attribute.id === command.attributeId)) {
+          return entity;
+        }
+        return {
+          ...entity,
+          attributes: entity.attributes.filter((attribute) => attribute.id !== command.attributeId),
+        };
+      });
 
     case 'ReorderAttribute':
       return updateEntity(diagram, command.entityId, (entity) =>
@@ -109,6 +119,11 @@ export function applyCommand(diagram: Diagram, command: Command): Diagram {
       };
 
     case 'UpdateRelationship':
+      if (
+        !diagram.relationships.some((relationship) => relationship.id === command.relationshipId)
+      ) {
+        return diagram;
+      }
       return {
         ...diagram,
         relationships: diagram.relationships.map((relationship) =>
@@ -119,6 +134,11 @@ export function applyCommand(diagram: Diagram, command: Command): Diagram {
       };
 
     case 'DeleteRelationship':
+      if (
+        !diagram.relationships.some((relationship) => relationship.id === command.relationshipId)
+      ) {
+        return diagram;
+      }
       return {
         ...diagram,
         relationships: diagram.relationships.filter(
@@ -165,8 +185,9 @@ function updateEntity(diagram: Diagram, entityId: Id, update: (entity: Entity) =
     if (entity.id !== entityId) {
       return entity;
     }
-    changed = true;
-    return update(entity);
+    const next = update(entity);
+    changed ||= next !== entity;
+    return next;
   });
 
   return changed ? { ...diagram, entities } : diagram;
