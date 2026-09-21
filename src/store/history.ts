@@ -63,6 +63,14 @@ export class UndoStack<T> {
     this.#coalesceKey = null;
   }
 
+  /**
+   * Replace the present without recording an undo entry or clearing the redo
+   * stack. Used for transient changes such as panning the viewport.
+   */
+  replace(next: T): void {
+    this.#present = next;
+  }
+
   undo(): T | undefined {
     const previous = this.#past.pop();
     if (previous === undefined) {
