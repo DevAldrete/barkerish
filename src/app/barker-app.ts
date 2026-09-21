@@ -1,10 +1,13 @@
-import { css, html } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
-import { createDiagram } from '../domain/model.js';
+import { css, html, nothing } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
+import { createDiagram, createRelationship, createRelationshipEnd } from '../domain/model.js';
 import { addEntity } from '../store/actions.js';
 import { EditorStore } from '../store/editor-store.js';
 import { StoreElement } from '../ui/store-element.js';
 import '../ui/erd-canvas.js';
+import '../ui/erd-toolbar.js';
+import '../ui/entity-inspector.js';
+import '../ui/relationship-inspector.js';
 import type { ErdCanvas } from '../ui/erd-canvas.js';
 
 @customElement('barker-app')
@@ -21,57 +24,55 @@ export class BarkerApp extends StoreElement {
       height: 100%;
     }
 
-    .toolbar {
+    .body {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
-      background: #ffffff;
-    }
-
-    .brand {
-      font-size: 0.95rem;
-      letter-spacing: 0.01em;
-    }
-
-    .spacer {
       flex: 1;
-    }
-
-    button {
-      font: inherit;
-      font-size: 0.85rem;
-      padding: 0.35rem 0.65rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      background: #f8fafc;
-      color: inherit;
-      cursor: pointer;
-    }
-
-    button:hover:not(:disabled) {
-      background: #eef2f7;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: default;
+      min-height: 0;
     }
 
     .workspace {
       position: relative;
       flex: 1;
-      min-height: 0;
+      min-width: 0;
     }
 
     erd-canvas {
       position: absolute;
       inset: 0;
     }
+
+    .hint {
+      position: absolute;
+      top: 0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #ffffff;
+      font-size: 0.78rem;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgb(15 23 42 / 20%);
+    }
+
+    .sidebar {
+      width: 20rem;
+      flex-shrink: 0;
+      border-left: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .empty {
+      padding: 0.9rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
   `;
 
   @query('erd-canvas') private canvas!: ErdCanvas;
+
+  /** undefined = not connecting, null = picking source, string = picking target. */
+  @state() private connectFrom: string | null | undefined = undefined;
 
   constructor() {
     super();
@@ -79,29 +80,100 @@ export class BarkerApp extends StoreElement {
   }
 
   override render() {
-    const { canUndo, canRedo } = this.store;
+    const { diagram, canUndo, canRedo, selection } = this.store;
 
     return html`
       <div class="app">
-        <header class="toolbar">
-          <strong class="brand">Barkerish</strong>
-          <button @click=${this.#onAddEntity}>Add entity</button>
-          <span class="spacer"></span>
-          <button ?disabled=${!canUndo} @click=${() => this.store.undo()}>Undo</button>
-          <button ?disabled=${!canRedo} @click=${() => this.store.redo()}>Redo</button>
-          <button @click=${() => this.canvas.zoomOut()}>Zoom out</button>
-          <button @click=${() => this.canvas.zoomIn()}>Zoom in</button>
-          <button @click=${() => this.canvas.zoomToFit()}>Fit</button>
-        </header>
-        <main class="workspace">
-          <erd-canvas .store=${this.store}></erd-canvas>
-        </main>
+        <erd-toolbar
+          .canUndo=${canUndo}
+          .canRedo=${canRedo}
+          .connectMode=${this.connectFrom !== undefined}
+          .gridVisible=${diagram.layout.grid.visible}
+          .gridSnap=${diagram.layout.grid.snap}
+          .diagramName=${diagram.name}
+          @add-entity=${() => addEntity(this.store)}
+          @toggle-connect=${this.#toggleConnect}
+          @undo=${() => this.store.undo()}
+          @redo=${() => this.store.redo()}
+          @zoom-in=${() => this.canvas.zoomIn()}
+          @zoom-out=${() => this.canvas.zoomOut()}
+          @zoom-fit=${() => this.canvas.zoomToFit()}
+          @toggle-grid=${() =>
+            this.store.dispatch(
+              { type: 'SetGrid', patch: { visible: !diagram.layout.grid.visible } },
+              { history: false },
+            )}
+          @toggle-snap=${() =>
+            this.store.dispatch(
+              { type: 'SetGrid', patch: { snap: !diagram.layout.grid.snap } },
+              { history: false },
+            )}
+          @rename=${this.#onRename}
+          @rename-commit=${() => this.store.endInteraction()}
+        ></erd-toolbar>
+        <div class="body">
+          <main class="workspace">
+            <erd-canvas
+              .store=${this.store}
+              .connectMode=${this.connectFrom !== undefined}
+              @entity-pick=${this.#onEntityPick}
+              @connect-cancel=${this.#cancelConnect}
+            ></erd-canvas>
+            ${this.connectFrom === undefined ? nothing : html`<div class="hint">${this.#hintText()}</div>`}
+          </main>
+          <aside class="sidebar">
+            ${selection === null ? html`<p class="empty">Select an entity or relationship to edit it.</p>` : nothing}
+            <entity-inspector .store=${this.store}></entity-inspector>
+            <relationship-inspector .store=${this.store}></relationship-inspector>
+          </aside>
+        </div>
       </div>
     `;
   }
 
-  #onAddEntity = (): void => {
-    addEntity(this.store);
+  #hintText(): string {
+    return this.connectFrom === null ? 'Select the source entity' : 'Select the target entity';
+  }
+
+  #onRename = (event: CustomEvent<string>): void => {
+    this.store.dispatch(
+      { type: 'RenameDiagram', name: event.detail },
+      { coalesceKey: 'diagram-name' },
+    );
+  };
+
+  #toggleConnect = (): void => {
+    this.connectFrom = this.connectFrom === undefined ? null : undefined;
+  };
+
+  #cancelConnect = (): void => {
+    this.connectFrom = undefined;
+  };
+
+  #onEntityPick = (event: CustomEvent<string>): void => {
+    const entityId = event.detail;
+
+    if (this.connectFrom === undefined) {
+      return;
+    }
+
+    if (this.connectFrom === null) {
+      this.connectFrom = entityId;
+      return;
+    }
+
+    if (entityId === this.connectFrom) {
+      return;
+    }
+
+    const relationship = createRelationship(
+      createRelationshipEnd(this.connectFrom, { cardinality: 'one', optionality: 'optional' }),
+      createRelationshipEnd(entityId, { cardinality: 'many', optionality: 'optional' }),
+    );
+
+    this.store.dispatch({ type: 'CreateRelationship', relationship });
+    this.store.select({ kind: 'relationship', id: relationship.id });
+    this.connectFrom = undefined;
   };
 }
 
