@@ -2,3 +2,6 @@ dist
 coverage
 node_modules
 package-lock.json
+
+# Documentation is authored by hand; keep its formatting as written.
+PRD.md
