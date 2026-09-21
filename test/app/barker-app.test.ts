@@ -10,11 +10,20 @@ describe('<barker-app>', () => {
     element = undefined;
   });
 
-  it('renders its title', async () => {
+  it('composes the toolbar and canvas', async () => {
     element = document.createElement('barker-app');
     document.body.append(element);
     await element.updateComplete;
 
-    expect(element.shadowRoot?.textContent).toContain('Barkerish');
+    expect(element.shadowRoot?.querySelector('erd-toolbar')).toBeTruthy();
+    expect(element.shadowRoot?.querySelector('erd-canvas')).toBeTruthy();
+  });
+
+  it('shows the inspector empty state when nothing is selected', async () => {
+    element = document.createElement('barker-app');
+    document.body.append(element);
+    await element.updateComplete;
+
+    expect(element.shadowRoot?.querySelector('.sidebar .empty')).toBeTruthy();
   });
 });
