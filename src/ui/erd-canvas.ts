@@ -1,5 +1,5 @@
 import { css, html } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 import type { Viewport } from '../domain/types.js';
 import { snapToGrid } from '../notation/geometry.js';
 import type { Box, Point } from '../notation/geometry.js';
@@ -41,6 +41,10 @@ export class ErdCanvas extends StoreElement {
 
     .canvas:active {
       cursor: grabbing;
+    }
+
+    .canvas.is-connecting {
+      cursor: crosshair;
     }
 
     .grid {
@@ -130,6 +134,9 @@ export class ErdCanvas extends StoreElement {
 
   @query('.canvas') private svgRoot!: SVGSVGElement;
 
+  /** When true, clicking entities picks endpoints instead of moving them. */
+  @property({ type: Boolean, attribute: false }) connectMode = false;
+
   #drag: DragState | null = null;
 
   override connectedCallback(): void {
@@ -148,7 +155,7 @@ export class ErdCanvas extends StoreElement {
 
     return html`
       <svg
-        class="canvas"
+        class="canvas ${this.connectMode ? 'is-connecting' : ''}"
         @pointerdown=${this.#onPointerDown}
         @pointermove=${this.#onPointerMove}
         @pointerup=${this.#onPointerUp}
@@ -251,6 +258,12 @@ export class ErdCanvas extends StoreElement {
       if (!entityId) {
         return;
       }
+
+      if (this.connectMode) {
+        this.#emit('entity-pick', entityId);
+        return;
+      }
+
       this.store.select({ kind: 'entity', id: entityId });
       const layout = this.store.diagram.layout.entities[entityId];
       if (layout) {
@@ -270,6 +283,11 @@ export class ErdCanvas extends StoreElement {
       if (relationshipId) {
         this.store.select({ kind: 'relationship', id: relationshipId });
       }
+      return;
+    }
+
+    if (this.connectMode) {
+      this.#emit('connect-cancel');
       return;
     }
 
@@ -368,9 +386,17 @@ export class ErdCanvas extends StoreElement {
     }
 
     if (event.key === 'Escape') {
+      if (this.connectMode) {
+        this.#emit('connect-cancel');
+        return;
+      }
       this.store.select(null);
     }
   };
+
+  #emit<T>(type: string, detail?: T): void {
+    this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+  }
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {
