@@ -77,4 +77,15 @@ describe('UndoStack', () => {
     expect(stack.canUndo).toBe(false);
     expect(stack.canRedo).toBe(false);
   });
+
+  it('replaces the present without touching history', () => {
+    const stack = new UndoStack('a');
+    stack.push('b');
+    stack.undo();
+    stack.replace('transient');
+
+    expect(stack.present).toBe('transient');
+    expect(stack.canUndo).toBe(false);
+    expect(stack.canRedo).toBe(true);
+  });
 });
