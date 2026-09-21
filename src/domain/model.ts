@@ -62,7 +62,8 @@ export function createRelationship(
 ): Relationship {
   return {
     id: input.id ?? createId(),
-    name: input.name ?? 'relationship',
+    sourceLabel: input.sourceLabel ?? 'relates to',
+    targetLabel: input.targetLabel ?? 'relates to',
     source,
     target,
     identifying: input.identifying ?? false,

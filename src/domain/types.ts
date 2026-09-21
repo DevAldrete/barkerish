@@ -45,7 +45,10 @@ export interface RelationshipEnd {
 
 export interface Relationship {
   id: Id;
-  name: string;
+  /** Label for the perspective read from the source entity. */
+  sourceLabel: string;
+  /** Label for the perspective read from the target entity. */
+  targetLabel: string;
   source: RelationshipEnd;
   target: RelationshipEnd;
   /** Identifying relationship; renders a bar at the child (target) end. */

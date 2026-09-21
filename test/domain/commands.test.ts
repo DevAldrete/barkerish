@@ -38,7 +38,7 @@ function relationshipCommand(id = 'r1'): Command {
     relationship: createRelationship(
       createRelationshipEnd('e1', { cardinality: 'one', optionality: 'mandatory' }),
       createRelationshipEnd('e2', { cardinality: 'many', optionality: 'optional' }),
-      { id, name: 'places' },
+      { id, sourceLabel: 'a placer of', targetLabel: 'placed by' },
     ),
   };
 }
