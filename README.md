@@ -4,16 +4,16 @@ A local-first web application for creating and editing **Entity Relationship Dia
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check and build to `dist/` |
-| `npm run preview` | Preview the production build |
-| `npm run typecheck` | Run `tsc --noEmit` |
-| `npm run lint` | Lint with ESLint |
-| `npm run format` | Format with Prettier |
-| `npm test` | Run the test suite once |
-| `npm run test:watch` | Run tests in watch mode |
+| Command              | Description                     |
+| -------------------- | ------------------------------- |
+| `npm run dev`        | Start the Vite dev server       |
+| `npm run build`      | Type-check and build to `dist/` |
+| `npm run preview`    | Preview the production build    |
+| `npm run typecheck`  | Run `tsc --noEmit`              |
+| `npm run lint`       | Lint with ESLint                |
+| `npm run format`     | Format with Prettier            |
+| `npm test`           | Run the test suite once         |
+| `npm run test:watch` | Run tests in watch mode         |
 
 ## Architecture
 
