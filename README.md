@@ -76,7 +76,7 @@ Pick a theme from the toolbar; the choice is stored in `localStorage` and applie
 
 ### Deployment
 
-The app is deployed to Netlify at **[barkerish.netlify.app](https://barkerish.netlify.app)**. Netlify builds from this repository (build command `npm run build`, publish directory `dist`); `base: './'` keeps the assets relative, so the same build works from any path or static host. Continuous integration in `.github/workflows/ci.yml` verifies formatting, lint, types, tests and the build on every push and pull request — it does not deploy.
+The app is deployed to Netlify at **[barkerish.netlify.app](https://barkerish.netlify.app)**. [`netlify.toml`](netlify.toml) pins the build command (`npm run build`), publish directory (`dist`) and Node.js version (`24`), and caches the content-hashed assets. `base: './'` keeps asset paths relative, so the same build works from any path or static host. Continuous integration in `.github/workflows/ci.yml` verifies formatting, lint, types, tests and the build on every push and pull request — it does not deploy.
 
 ## Keyboard shortcuts
 
