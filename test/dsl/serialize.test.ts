@@ -113,6 +113,63 @@ describe('serializeDocument', () => {
     expect(rebuilt.layout).toEqual(original.layout);
   });
 
+  it('round-trips empty data types, reserved names and special characters', () => {
+    const diagram = createDiagram('Odd "Name"');
+    diagram.entities = [
+      createEntity({
+        id: 'e1',
+        name: 'entity',
+        attributes: [
+          {
+            id: 'a1',
+            name: 'not',
+            dataType: '',
+            primaryKey: false,
+            foreignKey: false,
+            nullable: true,
+            unique: false,
+          },
+          {
+            id: 'a2',
+            name: 'kind',
+            dataType: 'character varying(255)',
+            primaryKey: false,
+            foreignKey: false,
+            nullable: false,
+            unique: true,
+          },
+        ],
+      }),
+      createEntity({ id: 'e2', name: 'Other', attributes: [] }),
+    ];
+    diagram.relationships = [
+      {
+        id: 'r1',
+        sourceLabel: 'has "many"',
+        targetLabel: 'belongs to',
+        source: { entityId: 'e1', optionality: 'mandatory', cardinality: 'one' },
+        target: { entityId: 'e2', optionality: 'optional', cardinality: 'many' },
+        identifying: false,
+      },
+    ];
+    diagram.layout.entities = {
+      e1: { x: 10, y: 20, width: 220 },
+      e2: { x: 400, y: 20, width: 220 },
+    };
+
+    const text = serializeDocument([diagram]);
+    const { document, errors } = parseDocument(text);
+    expect(errors).toEqual([]);
+
+    const { diagrams, errors: reconcileErrors } = reconcileDocument(document, [diagram]);
+    expect(reconcileErrors).toEqual([]);
+
+    const rebuilt = diagrams[0]!;
+    expect(rebuilt.name).toBe('Odd "Name"');
+    expect(rebuilt.entities).toEqual(diagram.entities);
+    expect(rebuilt.relationships).toEqual(diagram.relationships);
+  });
+
   it('round-trips multiple diagrams', () => {
     const one = createDiagram('One');
     one.entities = [createEntity({ id: 'x', name: 'X', attributes: [] })];
