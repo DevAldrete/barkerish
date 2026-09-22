@@ -37,6 +37,13 @@ export function renderRelationship(
       data-relationship-id=${relationship.id}
     >
       <line
+        class="relationship__hit"
+        x1=${edge.start.x}
+        y1=${edge.start.y}
+        x2=${edge.end.x}
+        y2=${edge.end.y}
+      />
+      <line
         class="relationship__line"
         x1=${edge.start.x}
         y1=${edge.start.y}

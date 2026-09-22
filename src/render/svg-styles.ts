@@ -69,6 +69,13 @@ export const SVG_STYLES = css`
     fill: none;
   }
 
+  .relationship__hit {
+    stroke: transparent;
+    stroke-width: 14;
+    fill: none;
+    cursor: pointer;
+  }
+
   .relationship__crowfoot,
   .relationship__bar {
     stroke: #475569;
