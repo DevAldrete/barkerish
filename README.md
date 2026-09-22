@@ -63,6 +63,15 @@ Pick a theme from the toolbar; the choice is stored in `localStorage` and applie
 | `npm test`           | Run the test suite once         |
 | `npm run test:watch` | Run tests in watch mode         |
 
+## Building for production
+
+`npm run build` type-checks and produces a fully static, self-contained site in `dist/` — no backend, server or network connection is required to run it. Open `dist/index.html` directly or serve the folder from any static host; `npm run preview` serves the build locally.
+
+- Assets are bundled and content-hashed for cache-busting, and minified with Vite's default esbuild minifier. Lit's docs suggest Terser, but on this project esbuild produced a smaller bundle (initial load ≈183 kB, ≈55 kB gzipped), so we keep the default.
+- Vite resolves Lit's `production` build for `vite build` and its `development` build (with extra runtime warnings) for `npm run dev`.
+- The text DSL is code-split and only downloaded when the **Text** dock is first opened.
+- `index.html` restores the saved theme background and `color-scheme` before the bundle loads, so dark-theme users see no flash of the light default.
+
 ## Keyboard shortcuts
 
 | Keys                   | Action                                               |
