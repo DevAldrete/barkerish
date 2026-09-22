@@ -128,4 +128,19 @@ describe('reconcileDocument', () => {
     expect(errors[0]!.message).toContain("Unknown entity 'Ghost'");
     expect(diagrams[0]!.relationships).toEqual([]);
   });
+
+  it('reports self-referencing relationships', () => {
+    const parsed = parse(`
+      diagram "D" {
+        entity A { id: integer pk }
+        relationship A (1..1) -> A (0..*)
+      }
+    `);
+
+    const { errors, diagrams } = reconcileDocument(parsed, []);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]!.message).toContain('Self-referencing');
+    expect(diagrams[0]!.relationships).toEqual([]);
+  });
 });

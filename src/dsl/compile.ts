@@ -149,6 +149,10 @@ function buildRelationships(
     if (!source || !target) {
       continue;
     }
+    if (source.entityId === target.entityId) {
+      errors.push(new DslError(0, 0, 'Self-referencing relationships are not supported yet.'));
+      continue;
+    }
 
     const match = matchRelationship(
       parsedRelationship,
