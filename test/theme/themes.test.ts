@@ -49,6 +49,14 @@ describe('applyTheme', () => {
     expect(root.dataset.theme).toBe('nord');
     expect(root.style.getPropertyValue('--erd-bg')).toBe(THEMES.nord.tokens['--erd-bg']);
   });
+
+  it('sets the browser colour scheme from the theme background', () => {
+    applyTheme('nord');
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+
+    applyTheme('light');
+    expect(document.documentElement.style.colorScheme).toBe('light');
+  });
 });
 
 describe('themeVariables', () => {
@@ -68,6 +76,13 @@ describe('theme persistence', () => {
   it('round-trips a stored theme', () => {
     saveTheme('catppuccin');
     expect(loadTheme()).toBe('catppuccin');
+  });
+
+  it('stores the background and scheme for a flash-free reload', () => {
+    saveTheme('nord');
+
+    expect(localStorage.getItem('barkerish:themeBg')).toBe(THEMES.nord.tokens['--erd-bg']);
+    expect(localStorage.getItem('barkerish:themeScheme')).toBe('dark');
   });
 
   it('falls back to the default for unknown or missing values', () => {

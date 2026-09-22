@@ -5,8 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Barkerish</title>
     <meta name="description" content="Local-first ERD editor using Barker notation" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f8fafc" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Crect x='5' y='8' width='9' height='16' rx='2' fill='%23ffffff'/%3E%3Crect x='18' y='8' width='9' height='16' rx='2' fill='%23ffffff' opacity='0.65'/%3E%3Cpath d='M14 16h4' stroke='%23ffffff' stroke-width='2'/%3E%3C/svg%3E"
+    />
+    <script>
+      // Restore the saved theme background and colour scheme before the bundle
+      // loads, so dark-theme users don't see a flash of the light default.
+      try {
+        const root = document.documentElement;
+        const background = localStorage.getItem('barkerish:themeBg');
+        if (background) root.style.backgroundColor = background;
+        const scheme = localStorage.getItem('barkerish:themeScheme');
+        if (scheme) root.style.colorScheme = scheme;
+      } catch {
+        // Storage may be unavailable; the default theme is used.
+      }
+    </script>
   </head>
   <body>
     <script type="module" src="/src/main.ts"></script>
+    <noscript
+      >Barkerish needs JavaScript to run. It stays fully local — nothing leaves your
+      browser.</noscript
+    >
   </body>
 </html>

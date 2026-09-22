@@ -262,9 +262,32 @@ export type ThemeId = keyof typeof definitions;
 export const DEFAULT_THEME: ThemeId = 'light';
 
 const STORAGE_KEY = 'barkerish:theme';
+/**
+ * Background and colour-scheme are stored separately so `index.html` can restore
+ * them before the bundle loads and avoid a flash of the default theme. Keep these
+ * keys in sync with the inline script in `index.html`.
+ */
+const STORAGE_BG_KEY = 'barkerish:themeBg';
+const STORAGE_SCHEME_KEY = 'barkerish:themeScheme';
 
 export function isThemeId(value: unknown): value is ThemeId {
   return typeof value === 'string' && value in THEMES;
+}
+
+/** Whether a theme's background is dark, used to set the browser colour scheme. */
+function colorSchemeFor(id: ThemeId): 'light' | 'dark' {
+  return isDarkColor(THEMES[id].tokens['--erd-bg']) ? 'dark' : 'light';
+}
+
+function isDarkColor(color: string): boolean {
+  if (!color.startsWith('#') || color.length < 7) {
+    return false;
+  }
+  const value = Number.parseInt(color.slice(1, 7), 16);
+  const red = (value >> 16) & 0xff;
+  const green = (value >> 8) & 0xff;
+  const blue = value & 0xff;
+  return (0.299 * red + 0.587 * green + 0.114 * blue) / 255 < 0.5;
 }
 
 /** Apply a theme by setting its tokens on the document root. */
@@ -274,6 +297,10 @@ export function applyTheme(id: ThemeId): void {
     root.style.setProperty(name, value);
   }
   root.dataset.theme = id;
+  root.style.colorScheme = colorSchemeFor(id);
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', THEMES[id].tokens['--erd-bg']);
 }
 
 /** CSS text that defines a theme's variables, for embedding in exported SVGs. */
@@ -299,6 +326,8 @@ export function loadTheme(): ThemeId {
 export function saveTheme(id: ThemeId): void {
   try {
     localStorage.setItem(STORAGE_KEY, id);
+    localStorage.setItem(STORAGE_BG_KEY, THEMES[id].tokens['--erd-bg']);
+    localStorage.setItem(STORAGE_SCHEME_KEY, colorSchemeFor(id));
   } catch {
     // Persisting the theme is a convenience only.
   }
