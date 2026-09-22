@@ -1,5 +1,6 @@
 import { css, html, nothing } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
+import { guard } from 'lit/directives/guard.js';
 import type { Viewport } from '../domain/types.js';
 import { snapToGrid } from '../notation/geometry.js';
 import type { Box, Point } from '../notation/geometry.js';
@@ -88,6 +89,8 @@ export class ErdCanvas extends StoreElement {
     return html`
       <svg
         class="canvas ${this.connectMode ? 'is-connecting' : ''}"
+        role="img"
+        aria-label="Diagram canvas"
         @pointerdown=${this.#onPointerDown}
         @pointermove=${this.#onPointerMove}
         @pointerup=${this.#onPointerUp}
@@ -96,7 +99,18 @@ export class ErdCanvas extends StoreElement {
         @contextmenu=${this.#onContextMenu}
         @dblclick=${this.#onDoubleClick}
       >
-        <g transform="translate(${x} ${y}) scale(${zoom})">${renderScene(diagram, selection)}</g>
+        <g transform="translate(${x} ${y}) scale(${zoom})">
+          ${guard(
+            [
+              diagram.entities,
+              diagram.relationships,
+              diagram.layout.entities,
+              diagram.layout.grid,
+              selection,
+            ],
+            () => renderScene(diagram, selection),
+          )}
+        </g>
       </svg>
       ${
         diagram.entities.length === 0
