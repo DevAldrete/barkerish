@@ -1,4 +1,4 @@
-import { css, html } from 'lit';
+import { css, html, nothing } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import type { Viewport } from '../domain/types.js';
 import { snapToGrid } from '../notation/geometry.js';
@@ -49,6 +49,17 @@ export class ErdCanvas extends StoreElement {
     .canvas.is-connecting {
       cursor: crosshair;
     }
+
+    .empty-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
   `;
 
   @query('.canvas') private svgRoot!: SVGSVGElement;
@@ -84,6 +95,11 @@ export class ErdCanvas extends StoreElement {
       >
         <g transform="translate(${x} ${y}) scale(${zoom})">${renderScene(diagram, selection)}</g>
       </svg>
+      ${
+        diagram.entities.length === 0
+          ? html`<div class="empty-hint">Add an entity to get started.</div>`
+          : nothing
+      }
     `;
   }
 
