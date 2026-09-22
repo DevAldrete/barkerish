@@ -4,6 +4,7 @@ import { createRelationship, createRelationshipEnd } from '../../src/domain/mode
 import { addEntity } from '../../src/store/actions.js';
 import type { BarkerApp } from '../../src/app/barker-app.js';
 import type { EntityInspector } from '../../src/ui/entity-inspector.js';
+import type { EntityList } from '../../src/ui/entity-list.js';
 
 async function mountApp(): Promise<BarkerApp> {
   const app = document.createElement('barker-app');
@@ -70,5 +71,17 @@ describe('<barker-app>', () => {
     const sidebar = element.shadowRoot!.querySelector('.sidebar');
     expect(sidebar?.querySelector('relationship-inspector')).toBeTruthy();
     expect(sidebar?.querySelector('entity-inspector')).toBeFalsy();
+  });
+
+  it('lists entities and selects one from the list', async () => {
+    element = await mountApp();
+    const id = addEntity(element.store);
+    await element.updateComplete;
+
+    const list = element.shadowRoot!.querySelector('entity-list') as EntityList;
+    await list.updateComplete;
+    (list.shadowRoot!.querySelector('.open') as HTMLButtonElement).click();
+
+    expect(element.store.selection).toEqual({ kind: 'entity', id });
   });
 });
