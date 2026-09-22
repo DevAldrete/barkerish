@@ -10,6 +10,7 @@ A local-first web application for creating and editing **Entity Relationship Dia
 - Barker rendering: `#` unique identifiers, `*` mandatory / `o` optional attributes, solid/dotted line halves, crow's feet and identifying bars.
 - Pan, zoom, grid and optional snapping; select, drag and keyboard shortcuts.
 - Double-click an entity or relationship to edit it; use the zoom slider, `−`/`+` and Fit controls in the bottom-right.
+- The sidebar lists the diagram's entities so you can select, zoom to, edit or delete each one directly.
 - Undo/redo for every editing operation.
 - Multiple diagrams persisted in IndexedDB (via Dexie).
 - Export/import the native, versioned diagram format; export the diagram as SVG.
