@@ -132,6 +132,21 @@ export class ErdCanvas extends StoreElement {
       })
       .filter((box): box is Box => box !== undefined);
 
+    this.#fitBoxes(boxes);
+  }
+
+  /** Pan and zoom so a single entity fills the view. */
+  zoomToEntity(entityId: string): void {
+    const { diagram } = this.store;
+    const entity = diagram.entities.find((candidate) => candidate.id === entityId);
+    const layout = diagram.layout.entities[entityId];
+    if (!entity || !layout) {
+      return;
+    }
+    this.#fitBoxes([entityBox(layout, entity.attributes.length)]);
+  }
+
+  #fitBoxes(boxes: Box[]): void {
     if (boxes.length === 0) {
       return;
     }
