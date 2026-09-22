@@ -59,6 +59,24 @@ export class DocumentManager extends EventTarget {
     this.#emit();
   }
 
+  /** Load every saved diagram in full, used by the text DSL. */
+  async loadAll(): Promise<Diagram[]> {
+    const metas = await this.#repository.list();
+    const diagrams: Diagram[] = [];
+    for (const meta of metas) {
+      const diagram = await this.#repository.load(meta.id);
+      if (diagram) {
+        diagrams.push(diagram);
+      }
+    }
+    return diagrams;
+  }
+
+  /** Persist a diagram without opening it or disturbing the current document. */
+  async save(diagram: Diagram): Promise<void> {
+    await this.#repository.save(diagram);
+  }
+
   async open(id: string): Promise<void> {
     if (id === this.#currentId) {
       return;
