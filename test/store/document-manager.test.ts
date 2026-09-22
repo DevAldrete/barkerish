@@ -93,4 +93,28 @@ describe('DocumentManager', () => {
     expect(manager.diagrams[0]?.name).toBe('Renamed');
     manager.dispose();
   });
+
+  it('imports a diagram as a new document', async () => {
+    const { repository, manager } = setup();
+    await manager.init();
+    const imported = { ...createDiagram('Imported'), id: 'imported-id' };
+
+    await manager.importDiagram(imported);
+
+    expect(manager.currentId).toBe('imported-id');
+    expect(await repository.load('imported-id')).toBeTruthy();
+    manager.dispose();
+  });
+
+  it('re-identifies an imported diagram whose id already exists', async () => {
+    const { repository, manager } = setup();
+    await manager.init();
+    const existingId = manager.currentId!;
+
+    await manager.importDiagram({ ...createDiagram('Clone'), id: existingId });
+
+    expect(manager.currentId).not.toBe(existingId);
+    expect((await repository.list()).length).toBe(2);
+    manager.dispose();
+  });
 });
