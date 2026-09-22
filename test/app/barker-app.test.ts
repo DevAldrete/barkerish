@@ -84,4 +84,38 @@ describe('<barker-app>', () => {
 
     expect(element.store.selection).toEqual({ kind: 'entity', id });
   });
+
+  it('opens the text editor and applies a document', async () => {
+    element = await mountApp();
+    const name = element.store.diagram.name;
+
+    const toolbar = element.shadowRoot!.querySelector('erd-toolbar')!;
+    await toolbar.updateComplete;
+    const textButton = [...toolbar.shadowRoot!.querySelectorAll('button')].find(
+      (button) => button.textContent?.trim() === 'Text',
+    );
+    textButton!.click();
+    await element.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
+
+    const editor = element.shadowRoot!.querySelector('dsl-editor') as HTMLElement & {
+      updateComplete: Promise<unknown>;
+    };
+    expect(editor).toBeTruthy();
+
+    editor.dispatchEvent(
+      new CustomEvent('apply', {
+        detail: `diagram "${name}" { entity Customer { id: integer pk } }`,
+      }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
+
+    expect(element.store.diagram.entities.map((entity) => entity.name)).toContain('Customer');
+    expect(element.store.canUndo).toBe(true);
+
+    element.store.undo();
+    expect(element.store.diagram.entities).toHaveLength(0);
+  });
 });

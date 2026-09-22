@@ -93,6 +93,7 @@ export class ErdToolbar extends LitElement {
   @property({ type: Boolean }) canUndo = false;
   @property({ type: Boolean }) canRedo = false;
   @property({ type: Boolean }) connectMode = false;
+  @property({ type: Boolean }) textOpen = false;
   @property({ type: Boolean }) gridVisible = true;
   @property({ type: Boolean }) gridSnap = false;
   @property() diagramName = '';
@@ -115,6 +116,9 @@ export class ErdToolbar extends LitElement {
           @click=${() => this.#emit('toggle-connect')}
         >
           ${this.connectMode ? 'Cancel relationship' : 'Add relationship'}
+        </button>
+        <button class=${this.textOpen ? 'active' : ''} @click=${() => this.#emit('toggle-text')}>
+          Text
         </button>
         <span class="spacer"></span>
         <label class="toggle">

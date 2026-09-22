@@ -1,17 +1,21 @@
 import { css, html, nothing } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { createDiagram, createRelationship, createRelationshipEnd } from '../domain/model.js';
+import { serializeDocument } from '../dsl/index.js';
+import type { DslError } from '../dsl/index.js';
 import { downloadText } from '../io/download.js';
 import { createRepository } from '../persistence/create-repository.js';
 import { parseDiagramFile, serializeDiagram } from '../persistence/native-format.js';
 import { serializeDiagramSvg } from '../render/svg-export.js';
 import { addEntity } from '../store/actions.js';
+import { applyDocument, planDocument } from '../store/apply-document.js';
 import { DocumentManager } from '../store/document-manager.js';
 import { EditorStore } from '../store/editor-store.js';
 import { applyTheme, DEFAULT_THEME, loadTheme, saveTheme } from '../theme/themes.js';
 import type { ThemeId } from '../theme/themes.js';
 import { StoreElement } from '../ui/store-element.js';
 import '../ui/diagram-list.js';
+import '../ui/dsl-editor.js';
 import '../ui/erd-canvas.js';
 import '../ui/erd-toolbar.js';
 import '../ui/entity-inspector.js';
@@ -63,14 +67,26 @@ export class BarkerApp extends StoreElement {
     }
 
     .workspace {
-      position: relative;
+      display: flex;
+      flex-direction: column;
       flex: 1;
       min-width: 0;
+    }
+
+    .canvas-area {
+      position: relative;
+      flex: 1;
+      min-height: 0;
     }
 
     erd-canvas {
       position: absolute;
       inset: 0;
+    }
+
+    dsl-editor {
+      height: 40%;
+      flex-shrink: 0;
     }
 
     .hint {
@@ -111,6 +127,11 @@ export class BarkerApp extends StoreElement {
 
   @state() private theme: ThemeId = DEFAULT_THEME;
 
+  @state() private textOpen = false;
+  @state() private dslText = '';
+  @state() private dslErrors: DslError[] = [];
+  @state() private dslStatus = '';
+
   readonly #manager: DocumentManager;
 
   constructor() {
@@ -145,12 +166,14 @@ export class BarkerApp extends StoreElement {
           .canUndo=${canUndo}
           .canRedo=${canRedo}
           .connectMode=${this.connectFrom !== undefined}
+          .textOpen=${this.textOpen}
           .gridVisible=${diagram.layout.grid.visible}
           .gridSnap=${diagram.layout.grid.snap}
           .diagramName=${diagram.name}
           .theme=${this.theme}
           @add-entity=${() => addEntity(this.store)}
           @toggle-connect=${this.#toggleConnect}
+          @toggle-text=${this.#toggleText}
           @undo=${() => this.store.undo()}
           @redo=${() => this.store.redo()}
           @toggle-grid=${() =>
@@ -189,25 +212,41 @@ export class BarkerApp extends StoreElement {
             ></entity-list>
           </aside>
           <main class="workspace">
-            <erd-canvas
-              .store=${this.store}
-              .connectMode=${this.connectFrom !== undefined}
-              @entity-pick=${this.#onEntityPick}
-              @connect-cancel=${this.#cancelConnect}
-              @edit-selection=${this.#onEditSelection}
-            ></erd-canvas>
+            <div class="canvas-area">
+              <erd-canvas
+                .store=${this.store}
+                .connectMode=${this.connectFrom !== undefined}
+                @entity-pick=${this.#onEntityPick}
+                @connect-cancel=${this.#cancelConnect}
+                @edit-selection=${this.#onEditSelection}
+              ></erd-canvas>
+              ${
+                this.connectFrom === undefined
+                  ? nothing
+                  : html`<div class="hint">${this.#hintText()}</div>`
+              }
+              <zoom-controls
+                .zoom=${diagram.layout.viewport.zoom}
+                @zoom-in=${() => this.canvas.zoomIn()}
+                @zoom-out=${() => this.canvas.zoomOut()}
+                @zoom-fit=${() => this.canvas.zoomToFit()}
+                @zoom=${(event: CustomEvent<number>) => this.canvas.setZoom(event.detail)}
+              ></zoom-controls>
+            </div>
             ${
-              this.connectFrom === undefined
-                ? nothing
-                : html`<div class="hint">${this.#hintText()}</div>`
+              this.textOpen
+                ? html`<dsl-editor
+                    .text=${this.dslText}
+                    .errors=${this.dslErrors}
+                    .status=${this.dslStatus}
+                    @refresh=${this.#onDslRefresh}
+                    @apply=${this.#onDslApply}
+                    @save-file=${this.#onDslSave}
+                    @load-file=${this.#onDslLoad}
+                    @close=${() => (this.textOpen = false)}
+                  ></dsl-editor>`
+                : nothing
             }
-            <zoom-controls
-              .zoom=${diagram.layout.viewport.zoom}
-              @zoom-in=${() => this.canvas.zoomIn()}
-              @zoom-out=${() => this.canvas.zoomOut()}
-              @zoom-fit=${() => this.canvas.zoomToFit()}
-              @zoom=${(event: CustomEvent<number>) => this.canvas.setZoom(event.detail)}
-            ></zoom-controls>
           </main>
           <aside class="sidebar">
             ${
@@ -268,6 +307,68 @@ export class BarkerApp extends StoreElement {
       console.error('Import failed', error);
       window.alert(error instanceof Error ? error.message : 'Import failed.');
     }
+  }
+
+  #toggleText = (): void => {
+    this.textOpen = !this.textOpen;
+    if (this.textOpen) {
+      void this.#loadDslText();
+    }
+  };
+
+  async #loadDslText(): Promise<void> {
+    const diagrams = await this.#manager.loadAll();
+    this.dslText = serializeDocument(diagrams);
+    this.dslErrors = [];
+  }
+
+  #onDslRefresh = (): void => {
+    void this.#loadDslText().then(() => {
+      this.dslStatus = 'Loaded from the diagram.';
+    });
+  };
+
+  #onDslApply = (event: CustomEvent<string>): void => {
+    void this.#applyDsl(event.detail);
+  };
+
+  async #applyDsl(text: string): Promise<void> {
+    const plan = await planDocument(text, this.#manager);
+    if (plan.errors.length > 0) {
+      this.dslErrors = plan.errors;
+      this.dslStatus = 'Fix the errors to apply.';
+      return;
+    }
+
+    if (plan.removed.length > 0) {
+      const names = plan.removed.map((diagram) => diagram.name).join(', ');
+      const confirmed = window.confirm(
+        `This text removes ${plan.removed.length} diagram(s): ${names}. Delete them?`,
+      );
+      if (!confirmed) {
+        this.dslStatus = 'Apply cancelled.';
+        return;
+      }
+    }
+
+    this.dslErrors = [];
+    await applyDocument(plan, this.#manager, this.store);
+    await this.#loadDslText();
+    this.dslStatus = 'Applied.';
+  }
+
+  #onDslSave = (event: CustomEvent<string>): void => {
+    downloadText('diagrams.barkerish.txt', event.detail, 'text/plain');
+  };
+
+  #onDslLoad = (event: CustomEvent<File>): void => {
+    void this.#loadDslFile(event.detail);
+  };
+
+  async #loadDslFile(file: File): Promise<void> {
+    this.dslText = await file.text();
+    this.dslErrors = [];
+    this.dslStatus = 'File loaded. Review and press Apply.';
   }
 
   #fileBase(): string {
