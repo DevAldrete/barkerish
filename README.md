@@ -2,6 +2,8 @@
 
 A local-first web application for creating and editing **Entity Relationship Diagrams (ERDs)** using Barker notation. Runs entirely in the browser; no account, backend, or network connection is required.
 
+**Live app:** [barkerish.netlify.app](https://barkerish.netlify.app)
+
 ## Features
 
 - Create, rename, move and delete entities.
@@ -71,6 +73,10 @@ Pick a theme from the toolbar; the choice is stored in `localStorage` and applie
 - Vite resolves Lit's `production` build for `vite build` and its `development` build (with extra runtime warnings) for `npm run dev`.
 - The text DSL is code-split and only downloaded when the **Text** dock is first opened.
 - `index.html` restores the saved theme background and `color-scheme` before the bundle loads, so dark-theme users see no flash of the light default.
+
+### Deployment
+
+The app is deployed to Netlify at **[barkerish.netlify.app](https://barkerish.netlify.app)**. Netlify builds from this repository (build command `npm run build`, publish directory `dist`); `base: './'` keeps the assets relative, so the same build works from any path or static host. Continuous integration in `.github/workflows/ci.yml` verifies formatting, lint, types, tests and the build on every push and pull request — it does not deploy.
 
 ## Keyboard shortcuts
 
