@@ -13,6 +13,11 @@ A local-first web application for creating and editing **Entity Relationship Dia
 - Undo/redo for every editing operation.
 - Multiple diagrams persisted in IndexedDB (via Dexie).
 - Export/import the native, versioned diagram format; export the diagram as SVG.
+- Themes: Light, Dark Grey, Ashen, Tokyo Night, Catppuccin, Gruvbox and Nord. The selected theme is remembered and is embedded in exported SVGs.
+
+## Themes
+
+Pick a theme from the toolbar; the choice is stored in `localStorage` and applied as CSS custom properties on the document root, so it reaches every shadow root. Colours are defined once in `src/theme/themes.ts` and are also written into exported SVGs.
 
 ## Commands
 
