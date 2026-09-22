@@ -14,7 +14,37 @@ A local-first web application for creating and editing **Entity Relationship Dia
 - Undo/redo for every editing operation.
 - Multiple diagrams persisted in IndexedDB (via Dexie).
 - Export/import the native, versioned diagram format; export the diagram as SVG.
+- Author the whole document as text with a Barkerish DSL and apply it in one undoable step.
 - Themes: Light, Dark Grey, Ashen, Tokyo Night, Catppuccin, Gruvbox and Nord. The selected theme is remembered and is embedded in exported SVGs.
+
+## Text DSL
+
+The **Text** button in the toolbar opens a dock where the whole document can be written as text. It is a full mirror of the saved diagrams: applying creates and updates the diagrams named in the text and deletes any that are missing (with a confirmation first). Only the currently open diagram participates in undo/redo; other diagrams are saved directly.
+
+```text
+diagram "Sales" [<id>] {
+  entity Customer [<id>] {
+    id:        integer   pk
+    name:      text      not null
+    email:     text      unique
+    countryId: integer   fk
+  }
+
+  entity Order [<id>] {
+    id:       integer    pk
+    placedAt: timestamp  not null
+  }
+
+  relationship [<id>] Customer (0..*) -> Order (1..1) : "places" / "placed by"
+  relationship Order (1..1) -> Customer (0..*) identifying
+}
+```
+
+- `entity Name { name: type pk fk unique not null }` declares an entity and its attributes. Attributes are optional (nullable) by default; `not null` makes them mandatory.
+- `relationship A (min..max) -> B (min..max)` describes each entity's own participation: `min` 0 = optional, 1 = mandatory; `max` 1 = one, `*` = many. Add `identifying` for an identifying relationship, and `: "source" / "target"` for the perspective labels.
+- `[...]` after a diagram, entity or relationship is an optional stable key. The serializer always writes it, so the text round-trips across renames; hand-written files may omit it and match by name.
+- Names that are not simple identifiers, or that collide with keywords, are quoted.
+- **Apply** (`Ctrl/Cmd + Enter`) parses and validates; errors are listed with line numbers and clicking one jumps to it. **From diagram** regenerates the text, and **Load**/**Save** move it to and from a plain-text file.
 
 ## Themes
 
