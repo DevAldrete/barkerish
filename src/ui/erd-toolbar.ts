@@ -114,6 +114,17 @@ export class ErdToolbar extends LitElement {
           Snap
         </label>
         <span class="spacer"></span>
+        <button @click=${() => this.#emit('export-native')}>Export</button>
+        <button @click=${() => this.#emit('import')}>Import</button>
+        <button @click=${() => this.#emit('export-svg')}>SVG</button>
+        <input
+          class="file"
+          type="file"
+          accept=".json,.barkerish,application/json"
+          hidden
+          @change=${this.#onFile}
+        />
+        <span class="spacer"></span>
         <button ?disabled=${!this.canUndo} @click=${() => this.#emit('undo')}>Undo</button>
         <button ?disabled=${!this.canRedo} @click=${() => this.#emit('redo')}>Redo</button>
         <button @click=${() => this.#emit('zoom-out')}>Zoom out</button>
@@ -122,6 +133,15 @@ export class ErdToolbar extends LitElement {
       </header>
     `;
   }
+
+  #onFile = (event: Event): void => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      this.#emit('import', file);
+    }
+    input.value = '';
+  };
 
   #onRename = (event: Event): void => {
     this.#emit('rename', (event.target as HTMLInputElement).value);

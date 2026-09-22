@@ -1,7 +1,10 @@
 import { css, html, nothing } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { createDiagram, createRelationship, createRelationshipEnd } from '../domain/model.js';
+import { downloadText } from '../io/download.js';
 import { createRepository } from '../persistence/create-repository.js';
+import { parseDiagramFile, serializeDiagram } from '../persistence/native-format.js';
+import { serializeDiagramSvg } from '../render/svg-export.js';
 import { addEntity } from '../store/actions.js';
 import { DocumentManager } from '../store/document-manager.js';
 import { EditorStore } from '../store/editor-store.js';
@@ -135,6 +138,9 @@ export class BarkerApp extends StoreElement {
             )}
           @rename=${this.#onRename}
           @rename-commit=${() => this.store.endInteraction()}
+          @export-native=${this.#exportNative}
+          @export-svg=${this.#exportSvg}
+          @import=${this.#onImport}
         ></erd-toolbar>
         <div class="body">
           <aside class="documents">
@@ -187,6 +193,40 @@ export class BarkerApp extends StoreElement {
       { coalesceKey: 'diagram-name' },
     );
   };
+
+  #exportNative = (): void => {
+    downloadText(`${this.#fileBase()}.barkerish.json`, serializeDiagram(this.store.diagram));
+  };
+
+  #exportSvg = (): void => {
+    downloadText(
+      `${this.#fileBase()}.svg`,
+      serializeDiagramSvg(this.store.diagram),
+      'image/svg+xml',
+    );
+  };
+
+  #onImport = (event: CustomEvent<File>): void => {
+    void this.#importFile(event.detail);
+  };
+
+  async #importFile(file: File): Promise<void> {
+    try {
+      const diagram = parseDiagramFile(await file.text());
+      await this.#manager.importDiagram(diagram);
+    } catch (error) {
+      console.error('Import failed', error);
+      window.alert(error instanceof Error ? error.message : 'Import failed.');
+    }
+  }
+
+  #fileBase(): string {
+    const base = this.store.diagram.name
+      .trim()
+      .replace(/[^a-z0-9._-]+/gi, '-')
+      .replace(/^-+|-+$/g, '');
+    return base || 'diagram';
+  }
 
   #toggleConnect = (): void => {
     this.connectFrom = this.connectFrom === undefined ? null : undefined;
