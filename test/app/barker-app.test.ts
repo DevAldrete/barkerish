@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import '../../src/app/barker-app.js';
+import { createRelationship, createRelationshipEnd } from '../../src/domain/model.js';
 import { addEntity } from '../../src/store/actions.js';
 import type { BarkerApp } from '../../src/app/barker-app.js';
 import type { EntityInspector } from '../../src/ui/entity-inspector.js';
@@ -51,5 +52,23 @@ describe('<barker-app>', () => {
     );
 
     expect(element.store.diagram.entities).toHaveLength(1);
+  });
+
+  it('shows the relationship editor when a relationship is selected', async () => {
+    element = await mountApp();
+    const source = addEntity(element.store);
+    const target = addEntity(element.store);
+    const relationship = createRelationship(
+      createRelationshipEnd(source),
+      createRelationshipEnd(target),
+      { id: 'r1' },
+    );
+    element.store.dispatch({ type: 'CreateRelationship', relationship });
+    element.store.select({ kind: 'relationship', id: 'r1' });
+    await element.updateComplete;
+
+    const sidebar = element.shadowRoot!.querySelector('.sidebar');
+    expect(sidebar?.querySelector('relationship-inspector')).toBeTruthy();
+    expect(sidebar?.querySelector('entity-inspector')).toBeFalsy();
   });
 });

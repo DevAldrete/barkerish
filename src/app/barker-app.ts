@@ -74,6 +74,7 @@ export class BarkerApp extends StoreElement {
       flex-shrink: 0;
       border-left: 1px solid #e2e8f0;
       background: #f8fafc;
+      overflow: auto;
     }
 
     .empty {
@@ -179,10 +180,10 @@ export class BarkerApp extends StoreElement {
             ${
               selection === null
                 ? html`<p class="empty">Select an entity or relationship to edit it.</p>`
-                : nothing
+                : selection.kind === 'entity'
+                  ? html`<entity-inspector .store=${this.store}></entity-inspector>`
+                  : html`<relationship-inspector .store=${this.store}></relationship-inspector>`
             }
-            <entity-inspector .store=${this.store}></entity-inspector>
-            <relationship-inspector .store=${this.store}></relationship-inspector>
           </aside>
         </div>
       </div>

@@ -71,8 +71,9 @@ export const SVG_STYLES = css`
 
   .relationship__hit {
     stroke: transparent;
-    stroke-width: 14;
+    stroke-width: 16;
     fill: none;
+    pointer-events: stroke;
     cursor: pointer;
   }
 
