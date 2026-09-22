@@ -153,9 +153,6 @@ class Parser {
       }
       typeTokens.push(this.#next());
     }
-    if (typeTokens.length === 0) {
-      this.#fail(this.#peek(), 'Expected a data type after ":".');
-    }
 
     let primaryKey = false;
     let foreignKey = false;

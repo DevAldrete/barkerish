@@ -116,19 +116,48 @@ describe('parseDocument', () => {
     expect(errors[0]!.message).toContain("Expected 'diagram'");
   });
 
-  it('reports missing colons and types', () => {
+  it('reports missing colons', () => {
     const { errors } = parseDocument(`
       diagram "D" {
         entity A {
           id integer pk
-          name:
         }
       }
     `);
 
-    expect(errors.length).toBeGreaterThanOrEqual(2);
+    expect(errors.length).toBeGreaterThanOrEqual(1);
     expect(errors[0]!.message).toContain("Expected ':'");
-    expect(errors[1]!.message).toContain('data type');
+  });
+
+  it('accepts attributes with no data type', () => {
+    const { document, errors } = parseDocument(`
+      diagram "D" {
+        entity A {
+          id:
+          name: pk
+        }
+      }
+    `);
+
+    expect(errors).toEqual([]);
+    expect(document.diagrams[0]!.entities[0]!.attributes).toEqual([
+      {
+        name: 'id',
+        dataType: '',
+        primaryKey: false,
+        foreignKey: false,
+        nullable: true,
+        unique: false,
+      },
+      {
+        name: 'name',
+        dataType: '',
+        primaryKey: true,
+        foreignKey: false,
+        nullable: true,
+        unique: false,
+      },
+    ]);
   });
 
   it('reports unterminated strings and keys', () => {

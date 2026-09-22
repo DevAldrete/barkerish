@@ -13,5 +13,6 @@ export type { CompileResult } from './compile.js';
 export { parseDocument } from './parser.js';
 export { reconcileDocument } from './reconcile.js';
 export type { ReconcileResult } from './reconcile.js';
+export { serializeDocument } from './serialize.js';
 export { tokenize } from './tokenizer.js';
 export type { Token, TokenType } from './tokenizer.js';
