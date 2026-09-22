@@ -1,10 +1,13 @@
 import { nothing, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, query } from 'lit/decorators.js';
 import type { Attribute, Entity } from '../domain/types.js';
 import { addAttribute } from '../store/actions.js';
+import { BASE_STYLES } from './base-styles.js';
 import { StoreElement } from './store-element.js';
 
 const PANEL_STYLES = css`
+  ${BASE_STYLES}
+
   :host {
     display: block;
     height: 100%;
@@ -37,6 +40,8 @@ const PANEL_STYLES = css`
   input[type='text'] {
     font: inherit;
     font-size: 0.85rem;
+    width: 100%;
+    min-width: 0;
     padding: 0.35rem 0.5rem;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
@@ -66,6 +71,7 @@ const PANEL_STYLES = css`
 
   .attribute__top input {
     flex: 1;
+    min-width: 0;
   }
 
   .flags {
@@ -128,6 +134,14 @@ const PANEL_STYLES = css`
 export class EntityInspector extends StoreElement {
   static override styles = PANEL_STYLES;
 
+  @query('input[data-role="entity-name"]') private nameInput?: HTMLInputElement;
+
+  /** Focus and select the entity name field (used on double-click). */
+  focusPrimaryField(): void {
+    this.nameInput?.focus();
+    this.nameInput?.select();
+  }
+
   override render() {
     const selection = this.store.selection;
     if (selection?.kind !== 'entity') {
@@ -146,6 +160,7 @@ export class EntityInspector extends StoreElement {
           Name
           <input
             type="text"
+            data-role="entity-name"
             .value=${entity.name}
             @input=${this.#onRename(entity)}
             @change=${() => this.store.endInteraction()}

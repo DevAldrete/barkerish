@@ -1,10 +1,13 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { DiagramMeta } from '../domain/types.js';
+import { BASE_STYLES } from './base-styles.js';
 
 @customElement('diagram-list')
 export class DiagramList extends LitElement {
   static override styles = css`
+    ${BASE_STYLES}
+
     :host {
       display: block;
       height: 100%;

@@ -1,10 +1,13 @@
 import { nothing, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, query } from 'lit/decorators.js';
 import type { Cardinality, Optionality, Relationship, RelationshipEnd } from '../domain/types.js';
 import { verbalizeRelationship } from '../notation/barker.js';
+import { BASE_STYLES } from './base-styles.js';
 import { StoreElement } from './store-element.js';
 
 const PANEL_STYLES = css`
+  ${BASE_STYLES}
+
   :host {
     display: block;
     height: 100%;
@@ -38,6 +41,8 @@ const PANEL_STYLES = css`
   select {
     font: inherit;
     font-size: 0.85rem;
+    width: 100%;
+    min-width: 0;
     padding: 0.35rem 0.5rem;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
@@ -105,9 +110,27 @@ const PANEL_STYLES = css`
   }
 `;
 
+const OPTIONALITY_OPTIONS: { value: Optionality; label: string }[] = [
+  { value: 'mandatory', label: 'Mandatory (solid)' },
+  { value: 'optional', label: 'Optional (dashed)' },
+];
+
+const CARDINALITY_OPTIONS: { value: Cardinality; label: string }[] = [
+  { value: 'one', label: 'One' },
+  { value: 'many', label: 'Many' },
+];
+
 @customElement('relationship-inspector')
 export class RelationshipInspector extends StoreElement {
   static override styles = PANEL_STYLES;
+
+  @query('input[data-role="relationship-label"]') private labelInput?: HTMLInputElement;
+
+  /** Focus and select the first perspective label (used on double-click). */
+  focusPrimaryField(): void {
+    this.labelInput?.focus();
+    this.labelInput?.select();
+  }
 
   override render() {
     const selection = this.store.selection;
@@ -164,6 +187,7 @@ export class RelationshipInspector extends StoreElement {
           Label
           <input
             type="text"
+            data-role="relationship-label"
             .value=${which === 'source' ? relationship.sourceLabel : relationship.targetLabel}
             @input=${this.#onLabel(relationship, which)}
             @change=${() => this.store.endInteraction()}
@@ -171,12 +195,12 @@ export class RelationshipInspector extends StoreElement {
         </label>
         <div class="grid-2">
           <label class="field">
-            Optionality
+            Participation
             <select @change=${this.#onOptionality(relationship, which)}>
-              ${(['mandatory', 'optional'] as Optionality[]).map(
-                (value) =>
-                  html`<option value=${value} ?selected=${end.optionality === value}>
-                    ${value}
+              ${OPTIONALITY_OPTIONS.map(
+                (option) =>
+                  html`<option value=${option.value} ?selected=${end.optionality === option.value}>
+                    ${option.label}
                   </option>`,
               )}
             </select>
@@ -184,10 +208,10 @@ export class RelationshipInspector extends StoreElement {
           <label class="field">
             Cardinality
             <select @change=${this.#onCardinality(relationship, which)}>
-              ${(['one', 'many'] as Cardinality[]).map(
-                (value) =>
-                  html`<option value=${value} ?selected=${end.cardinality === value}>
-                    ${value}
+              ${CARDINALITY_OPTIONS.map(
+                (option) =>
+                  html`<option value=${option.value} ?selected=${end.cardinality === option.value}>
+                    ${option.label}
                   </option>`,
               )}
             </select>

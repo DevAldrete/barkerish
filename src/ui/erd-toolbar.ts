@@ -1,9 +1,12 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { BASE_STYLES } from './base-styles.js';
 
 @customElement('erd-toolbar')
 export class ErdToolbar extends LitElement {
   static override styles = css`
+    ${BASE_STYLES}
+
     :host {
       display: block;
     }
@@ -127,9 +130,6 @@ export class ErdToolbar extends LitElement {
         <span class="spacer"></span>
         <button ?disabled=${!this.canUndo} @click=${() => this.#emit('undo')}>Undo</button>
         <button ?disabled=${!this.canRedo} @click=${() => this.#emit('redo')}>Redo</button>
-        <button @click=${() => this.#emit('zoom-out')}>Zoom out</button>
-        <button @click=${() => this.#emit('zoom-in')}>Zoom in</button>
-        <button @click=${() => this.#emit('zoom-fit')}>Fit</button>
       </header>
     `;
   }
