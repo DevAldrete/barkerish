@@ -1,4 +1,5 @@
 import { LitElement, nothing, css, html } from 'lit';
+import type { PropertyValues } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { parseDocument } from '../dsl/index.js';
 import type { DslError } from '../dsl/index.js';
@@ -127,8 +128,23 @@ export class DslEditor extends LitElement {
   @query('textarea') private textarea?: HTMLTextAreaElement;
   @query('input[type="file"]') private fileInput?: HTMLInputElement;
 
+  /**
+   * The editor owns its buffer. The `text` property is only adopted when it
+   * actually changes, so an unrelated re-render (e.g. an autosave completing)
+   * cannot clobber in-progress edits.
+   */
+  #value = '';
+  #lastText = '';
+
+  override willUpdate(changed: PropertyValues): void {
+    if (changed.has('text') && this.text !== this.#lastText) {
+      this.#lastText = this.text;
+      this.#value = this.text;
+    }
+  }
+
   override render() {
-    const parseErrors = parseDocument(this.text).errors;
+    const parseErrors = parseDocument(this.#value).errors;
     const errors = [...parseErrors, ...this.errors];
 
     return html`
@@ -138,11 +154,11 @@ export class DslEditor extends LitElement {
         <span class="spacer"></span>
         <button @click=${() => this.#emit('refresh')}>From diagram</button>
         <button @click=${() => this.fileInput?.click()}>Load</button>
-        <button @click=${() => this.#emit('save-file', this.text)}>Save</button>
+        <button @click=${() => this.#emit('save-file', this.#value)}>Save</button>
         <button
           class="primary"
-          ?disabled=${errors.length > 0}
-          @click=${() => this.#emit('apply', this.text)}
+          ?disabled=${parseErrors.length > 0}
+          @click=${() => this.#emit('apply', this.#value)}
         >
           Apply
         </button>
@@ -151,7 +167,7 @@ export class DslEditor extends LitElement {
       </div>
       <div class="body">
         <textarea
-          .value=${this.text}
+          .value=${this.#value}
           spellcheck="false"
           aria-label="Diagram text"
           @input=${this.#onInput}
@@ -174,13 +190,14 @@ export class DslEditor extends LitElement {
   }
 
   #onInput = (event: Event): void => {
-    this.text = (event.target as HTMLTextAreaElement).value;
+    this.#value = (event.target as HTMLTextAreaElement).value;
+    this.requestUpdate();
   };
 
   #onKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
-      this.#emit('apply', this.text);
+      this.#emit('apply', this.#value);
     }
   };
 
@@ -197,7 +214,7 @@ export class DslEditor extends LitElement {
     if (!this.textarea || line <= 0) {
       return;
     }
-    const lines = this.text.split('\n');
+    const lines = this.#value.split('\n');
     let offset = 0;
     for (let index = 0; index < line - 1 && index < lines.length; index += 1) {
       offset += (lines[index]?.length ?? 0) + 1;

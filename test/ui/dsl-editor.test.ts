@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../src/ui/dsl-editor.js';
 import type { DslEditor } from '../../src/ui/dsl-editor.js';
+import { DslError } from '../../src/dsl/index.js';
 
 describe('<dsl-editor>', () => {
   let element: DslEditor | undefined;
@@ -53,6 +54,39 @@ describe('<dsl-editor>', () => {
       .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', metaKey: true, bubbles: true }));
 
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps in-progress edits when the text property is re-set to the same value', async () => {
+    const editor = await mount('diagram "D" { entity A { id: integer pk } }');
+    const textarea = editor.shadowRoot!.querySelector('textarea') as HTMLTextAreaElement;
+
+    textarea.value = 'diagram "D" { entity Edited { id: integer pk } }';
+    textarea.dispatchEvent(new Event('input'));
+    await editor.updateComplete;
+
+    editor.text = 'diagram "D" { entity A { id: integer pk } }';
+    await editor.updateComplete;
+
+    expect(textarea.value).toContain('Edited');
+  });
+
+  it('adopts text when the property actually changes', async () => {
+    const editor = await mount('one');
+
+    editor.text = 'two';
+    await editor.updateComplete;
+
+    expect((editor.shadowRoot!.querySelector('textarea') as HTMLTextAreaElement).value).toBe('two');
+  });
+
+  it('does not disable Apply for semantic errors that the user can fix by reapplying', async () => {
+    const editor = await mount('diagram "D" { entity A { id: integer pk } }');
+    editor.errors = [new DslError(0, 0, 'Unknown entity')];
+    await editor.updateComplete;
+
+    const apply = editor.shadowRoot!.querySelector('button.primary') as HTMLButtonElement;
+    expect(apply.disabled).toBe(false);
+    expect(editor.shadowRoot!.querySelectorAll('.errors li')).toHaveLength(1);
   });
 
   it('emits refresh, save-file and load-file', async () => {
