@@ -1,5 +1,6 @@
+import { createId } from '../domain/ids.js';
 import { createDiagram } from '../domain/model.js';
-import type { DiagramMeta } from '../domain/types.js';
+import type { Diagram, DiagramMeta } from '../domain/types.js';
 import { Autosave } from '../persistence/autosave.js';
 import type { DiagramRepository } from '../persistence/repository.js';
 import type { EditorStore } from './editor-store.js';
@@ -84,6 +85,18 @@ export class DocumentManager extends EventTarget {
     this.#currentId = diagram.id;
     writeLastId(diagram.id);
     await this.refresh();
+  }
+
+  async importDiagram(diagram: Diagram): Promise<void> {
+    await this.#autosave.flush();
+
+    const candidate: Diagram = (await this.#repository.load(diagram.id))
+      ? { ...diagram, id: createId() }
+      : diagram;
+
+    await this.#repository.save(candidate);
+    await this.refresh();
+    await this.open(candidate.id);
   }
 
   async remove(id: string): Promise<void> {
