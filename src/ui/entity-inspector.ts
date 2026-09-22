@@ -26,7 +26,7 @@ const PANEL_STYLES = css`
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #64748b;
+    color: var(--erd-text-muted);
   }
 
   .field {
@@ -34,7 +34,7 @@ const PANEL_STYLES = css`
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.75rem;
-    color: #475569;
+    color: var(--erd-text-muted);
   }
 
   input[type='text'] {
@@ -43,9 +43,10 @@ const PANEL_STYLES = css`
     width: 100%;
     min-width: 0;
     padding: 0.35rem 0.5rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--erd-border-strong);
     border-radius: 6px;
-    color: #0f172a;
+    background: var(--erd-surface);
+    color: var(--erd-text);
   }
 
   .attributes {
@@ -55,13 +56,13 @@ const PANEL_STYLES = css`
   }
 
   .attribute {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--erd-border);
     border-radius: 8px;
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    background: #ffffff;
+    background: var(--erd-surface);
   }
 
   .attribute__top {
@@ -79,7 +80,7 @@ const PANEL_STYLES = css`
     flex-wrap: wrap;
     gap: 0.6rem;
     font-size: 0.72rem;
-    color: #475569;
+    color: var(--erd-text-muted);
   }
 
   .flags label {
@@ -97,15 +98,15 @@ const PANEL_STYLES = css`
     font: inherit;
     font-size: 0.78rem;
     padding: 0.3rem 0.55rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--erd-border-strong);
     border-radius: 6px;
-    background: #f8fafc;
+    background: var(--erd-surface-2);
     color: inherit;
     cursor: pointer;
   }
 
   button:hover:not(:disabled) {
-    background: #eef2f7;
+    background: var(--erd-border);
   }
 
   button:disabled {
@@ -119,14 +120,14 @@ const PANEL_STYLES = css`
   }
 
   button.danger {
-    border-color: #fecaca;
-    color: #b91c1c;
+    border-color: var(--erd-danger-soft);
+    color: var(--erd-danger);
   }
 
   .empty {
     padding: 0.9rem;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--erd-text-subtle);
   }
 `;
 

@@ -2,7 +2,7 @@ import { css } from 'lit';
 
 /**
  * Styles for the rendered scene. Shared by the canvas and the SVG exporter so an
- * exported file looks the same as the editor.
+ * exported file looks the same as the editor. Colours come from theme tokens.
  */
 export const SVG_STYLES = css`
   .grid {
@@ -10,7 +10,7 @@ export const SVG_STYLES = css`
   }
 
   .grid__line {
-    stroke: #e2e8f0;
+    stroke: var(--erd-grid);
     stroke-width: 1;
   }
 
@@ -19,52 +19,52 @@ export const SVG_STYLES = css`
   }
 
   .entity__body {
-    fill: #ffffff;
-    stroke: #94a3b8;
+    fill: var(--erd-entity-fill);
+    stroke: var(--erd-entity-stroke);
     stroke-width: 1.5;
   }
 
   .entity__header {
-    fill: #e2e8f0;
-    stroke: #94a3b8;
+    fill: var(--erd-entity-header);
+    stroke: var(--erd-entity-stroke);
     stroke-width: 1.5;
   }
 
   .entity__name {
-    fill: #0f172a;
+    fill: var(--erd-text);
     font-size: 14px;
     font-weight: 600;
   }
 
   .attribute__marker {
-    fill: #475569;
+    fill: var(--erd-marker);
     font-size: 12px;
     font-weight: 700;
   }
 
   .attribute__name {
-    fill: #1e293b;
+    fill: var(--erd-attribute);
     font-size: 12px;
   }
 
   .attribute__type {
-    fill: #64748b;
+    fill: var(--erd-attribute-type);
     font-size: 11px;
   }
 
   .attribute__unique {
-    fill: #7c3aed;
+    fill: var(--erd-unique);
     font-size: 10px;
     font-weight: 700;
   }
 
   .entity.is-selected .entity__body {
-    stroke: #2563eb;
+    stroke: var(--erd-accent);
     stroke-width: 2.5;
   }
 
   .relationship__line {
-    stroke: #64748b;
+    stroke: var(--erd-relationship);
     stroke-width: 1.5;
     fill: none;
   }
@@ -79,13 +79,13 @@ export const SVG_STYLES = css`
 
   .relationship__crowfoot,
   .relationship__bar {
-    stroke: #475569;
+    stroke: var(--erd-relationship-strong);
     stroke-width: 1.5;
     fill: none;
   }
 
   .relationship__label {
-    fill: #475569;
+    fill: var(--erd-label);
     font-size: 11px;
     pointer-events: none;
   }
@@ -93,7 +93,7 @@ export const SVG_STYLES = css`
   .relationship.is-selected .relationship__line,
   .relationship.is-selected .relationship__crowfoot,
   .relationship.is-selected .relationship__bar {
-    stroke: #2563eb;
+    stroke: var(--erd-accent);
     stroke-width: 2.5;
   }
 

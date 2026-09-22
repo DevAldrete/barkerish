@@ -12,8 +12,8 @@ export class DiagramList extends LitElement {
       display: block;
       height: 100%;
       overflow: auto;
-      background: #ffffff;
-      border-right: 1px solid #e2e8f0;
+      background: var(--erd-surface);
+      border-right: 1px solid var(--erd-border);
     }
 
     .head {
@@ -21,11 +21,11 @@ export class DiagramList extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: 0.6rem 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--erd-border);
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #64748b;
+      color: var(--erd-text-muted);
     }
 
     ul {
@@ -45,7 +45,7 @@ export class DiagramList extends LitElement {
     }
 
     li.current {
-      background: #e0edff;
+      background: var(--erd-accent-soft);
     }
 
     .open {
@@ -55,7 +55,7 @@ export class DiagramList extends LitElement {
       background: transparent;
       font: inherit;
       font-size: 0.83rem;
-      color: #0f172a;
+      color: var(--erd-text);
       padding: 0.4rem 0.5rem;
       border-radius: 6px;
       cursor: pointer;
@@ -65,34 +65,34 @@ export class DiagramList extends LitElement {
     }
 
     .open:hover {
-      background: #eef2f7;
+      background: var(--erd-surface-2);
     }
 
     button {
       font: inherit;
       font-size: 0.78rem;
       padding: 0.3rem 0.5rem;
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--erd-border-strong);
       border-radius: 6px;
-      background: #f8fafc;
+      background: var(--erd-surface-2);
       color: inherit;
       cursor: pointer;
     }
 
     button:hover {
-      background: #eef2f7;
+      background: var(--erd-border);
     }
 
     .delete {
       border: none;
       background: transparent;
-      color: #94a3b8;
+      color: var(--erd-text-subtle);
       padding: 0.3rem 0.45rem;
       line-height: 1;
     }
 
     .delete:hover {
-      color: #b91c1c;
+      color: var(--erd-danger);
       background: transparent;
     }
   `;

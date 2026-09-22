@@ -23,10 +23,10 @@ export class ZoomControls extends LitElement {
       align-items: center;
       gap: 0.4rem;
       padding: 0.35rem 0.5rem;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--erd-border);
       border-radius: 10px;
-      background: #ffffff;
-      box-shadow: 0 4px 16px rgb(15 23 42 / 12%);
+      background: var(--erd-surface);
+      box-shadow: 0 4px 16px var(--erd-shadow);
     }
 
     button {
@@ -38,15 +38,15 @@ export class ZoomControls extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--erd-border-strong);
       border-radius: 7px;
-      background: #f8fafc;
-      color: #0f172a;
+      background: var(--erd-surface-2);
+      color: var(--erd-text);
       cursor: pointer;
     }
 
     button:hover {
-      background: #eef2f7;
+      background: var(--erd-border);
     }
 
     button.fit {
@@ -57,7 +57,7 @@ export class ZoomControls extends LitElement {
 
     input[type='range'] {
       width: 8rem;
-      accent-color: #2563eb;
+      accent-color: var(--erd-accent);
       cursor: pointer;
     }
 
@@ -66,7 +66,7 @@ export class ZoomControls extends LitElement {
       text-align: right;
       font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
-      color: #475569;
+      color: var(--erd-text-muted);
     }
   `;
 

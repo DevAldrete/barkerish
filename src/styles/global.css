@@ -10,8 +10,8 @@ body {
     -apple-system,
     'Segoe UI',
     sans-serif;
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--erd-text, #0f172a);
+  background: var(--erd-bg, #f8fafc);
   -webkit-font-smoothing: antialiased;
 }
 

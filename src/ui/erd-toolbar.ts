@@ -1,5 +1,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { THEMES } from '../theme/themes.js';
+import type { ThemeId } from '../theme/themes.js';
 import { BASE_STYLES } from './base-styles.js';
 
 @customElement('erd-toolbar')
@@ -16,8 +18,9 @@ export class ErdToolbar extends LitElement {
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
-      background: #ffffff;
+      border-bottom: 1px solid var(--erd-border);
+      background: var(--erd-surface);
+      color: var(--erd-text);
     }
 
     .brand {
@@ -30,9 +33,11 @@ export class ErdToolbar extends LitElement {
       font: inherit;
       font-size: 0.85rem;
       padding: 0.35rem 0.5rem;
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--erd-border-strong);
       border-radius: 6px;
       min-width: 12rem;
+      background: var(--erd-surface-2);
+      color: var(--erd-text);
     }
 
     .spacer {
@@ -43,15 +48,15 @@ export class ErdToolbar extends LitElement {
       font: inherit;
       font-size: 0.85rem;
       padding: 0.35rem 0.65rem;
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--erd-border-strong);
       border-radius: 6px;
-      background: #f8fafc;
+      background: var(--erd-surface-2);
       color: inherit;
       cursor: pointer;
     }
 
     button:hover:not(:disabled) {
-      background: #eef2f7;
+      background: var(--erd-border);
     }
 
     button:disabled {
@@ -60,9 +65,9 @@ export class ErdToolbar extends LitElement {
     }
 
     button.active {
-      border-color: #2563eb;
-      background: #dbeafe;
-      color: #1d4ed8;
+      border-color: var(--erd-accent);
+      background: var(--erd-accent-soft);
+      color: var(--erd-accent-strong);
     }
 
     .toggle {
@@ -70,7 +75,18 @@ export class ErdToolbar extends LitElement {
       align-items: center;
       gap: 0.3rem;
       font-size: 0.8rem;
-      color: #334155;
+      color: var(--erd-text-muted);
+    }
+
+    select {
+      font: inherit;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.4rem;
+      border: 1px solid var(--erd-border-strong);
+      border-radius: 6px;
+      background: var(--erd-surface-2);
+      color: var(--erd-text);
+      cursor: pointer;
     }
   `;
 
@@ -80,6 +96,7 @@ export class ErdToolbar extends LitElement {
   @property({ type: Boolean }) gridVisible = true;
   @property({ type: Boolean }) gridSnap = false;
   @property() diagramName = '';
+  @property() theme: ThemeId = 'light';
 
   override render() {
     return html`
@@ -116,7 +133,17 @@ export class ErdToolbar extends LitElement {
           />
           Snap
         </label>
-        <span class="spacer"></span>
+        <select
+          aria-label="Theme"
+          .value=${this.theme}
+          @change=${(event: Event) =>
+            this.#emit('theme', (event.target as HTMLSelectElement).value as ThemeId)}
+        >
+          ${Object.entries(THEMES).map(
+            ([id, definition]) =>
+              html`<option value=${id} ?selected=${id === this.theme}>${definition.label}</option>`,
+          )}
+        </select>
         <button @click=${() => this.#emit('export-native')}>Export</button>
         <button @click=${() => this.#emit('import')}>Import</button>
         <button @click=${() => this.#emit('export-svg')}>SVG</button>

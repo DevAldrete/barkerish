@@ -1,6 +1,8 @@
 import { html, render } from 'lit';
 import type { Diagram } from '../domain/types.js';
 import { entityBox } from '../notation/geometry.js';
+import { DEFAULT_THEME, themeVariables } from '../theme/themes.js';
+import type { ThemeId } from '../theme/themes.js';
 import { renderScene } from './scene.js';
 import { SVG_STYLES } from './svg-styles.js';
 
@@ -41,7 +43,7 @@ export function diagramBounds(diagram: Diagram): Bounds {
 }
 
 /** Build a standalone SVG element for the diagram, independent of pan and zoom. */
-export function renderDiagramSvg(diagram: Diagram): SVGSVGElement {
+export function renderDiagramSvg(diagram: Diagram, theme: ThemeId = DEFAULT_THEME): SVGSVGElement {
   const bounds = diagramBounds(diagram);
   const container = document.createElement('div');
 
@@ -63,12 +65,12 @@ export function renderDiagramSvg(diagram: Diagram): SVGSVGElement {
   }
 
   const style = document.createElementNS(SVG_NS, 'style');
-  style.textContent = SVG_STYLES.cssText;
+  style.textContent = themeVariables(theme) + SVG_STYLES.cssText;
   svg.prepend(style);
 
   return svg;
 }
 
-export function serializeDiagramSvg(diagram: Diagram): string {
-  return new XMLSerializer().serializeToString(renderDiagramSvg(diagram));
+export function serializeDiagramSvg(diagram: Diagram, theme: ThemeId = DEFAULT_THEME): string {
+  return new XMLSerializer().serializeToString(renderDiagramSvg(diagram, theme));
 }

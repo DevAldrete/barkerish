@@ -8,6 +8,8 @@ import { serializeDiagramSvg } from '../render/svg-export.js';
 import { addEntity } from '../store/actions.js';
 import { DocumentManager } from '../store/document-manager.js';
 import { EditorStore } from '../store/editor-store.js';
+import { applyTheme, DEFAULT_THEME, loadTheme, saveTheme } from '../theme/themes.js';
+import type { ThemeId } from '../theme/themes.js';
 import { StoreElement } from '../ui/store-element.js';
 import '../ui/diagram-list.js';
 import '../ui/erd-canvas.js';
@@ -62,25 +64,25 @@ export class BarkerApp extends StoreElement {
       transform: translateX(-50%);
       padding: 0.4rem 0.75rem;
       border-radius: 999px;
-      background: #1d4ed8;
-      color: #ffffff;
+      background: var(--erd-accent-strong);
+      color: var(--erd-accent-contrast);
       font-size: 0.78rem;
       pointer-events: none;
-      box-shadow: 0 2px 8px rgb(15 23 42 / 20%);
+      box-shadow: 0 2px 8px var(--erd-shadow);
     }
 
     .sidebar {
       width: 20rem;
       flex-shrink: 0;
-      border-left: 1px solid #e2e8f0;
-      background: #f8fafc;
+      border-left: 1px solid var(--erd-border);
+      background: var(--erd-bg);
       overflow: auto;
     }
 
     .empty {
       padding: 0.9rem;
       font-size: 0.8rem;
-      color: #94a3b8;
+      color: var(--erd-text-subtle);
     }
   `;
 
@@ -91,12 +93,17 @@ export class BarkerApp extends StoreElement {
   /** undefined = not connecting, null = picking source, string = picking target. */
   @state() private connectFrom: string | null | undefined = undefined;
 
+  @state() private theme: ThemeId = DEFAULT_THEME;
+
   readonly #manager: DocumentManager;
 
   constructor() {
     super();
     this.store = new EditorStore(createDiagram('Untitled Diagram'));
     this.#manager = new DocumentManager(this.store, createRepository());
+
+    this.theme = loadTheme();
+    applyTheme(this.theme);
   }
 
   override connectedCallback(): void {
@@ -125,6 +132,7 @@ export class BarkerApp extends StoreElement {
           .gridVisible=${diagram.layout.grid.visible}
           .gridSnap=${diagram.layout.grid.snap}
           .diagramName=${diagram.name}
+          .theme=${this.theme}
           @add-entity=${() => addEntity(this.store)}
           @toggle-connect=${this.#toggleConnect}
           @undo=${() => this.store.undo()}
@@ -144,6 +152,7 @@ export class BarkerApp extends StoreElement {
           @export-native=${this.#exportNative}
           @export-svg=${this.#exportSvg}
           @import=${this.#onImport}
+          @theme=${this.#onTheme}
         ></erd-toolbar>
         <div class="body">
           <aside class="documents">
@@ -212,9 +221,15 @@ export class BarkerApp extends StoreElement {
   #exportSvg = (): void => {
     downloadText(
       `${this.#fileBase()}.svg`,
-      serializeDiagramSvg(this.store.diagram),
+      serializeDiagramSvg(this.store.diagram, this.theme),
       'image/svg+xml',
     );
+  };
+
+  #onTheme = (event: CustomEvent<ThemeId>): void => {
+    this.theme = event.detail;
+    applyTheme(this.theme);
+    saveTheme(this.theme);
   };
 
   #onImport = (event: CustomEvent<File>): void => {

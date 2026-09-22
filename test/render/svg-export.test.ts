@@ -48,4 +48,10 @@ describe('serializeDiagramSvg', () => {
     expect(markup).toContain('.entity__body');
     expect(markup).toContain('Customer');
   });
+
+  it('embeds the selected theme tokens', () => {
+    const markup = serializeDiagramSvg(fixture(), 'nord');
+
+    expect(markup).toContain('--erd-entity-fill:#3b4252');
+  });
 });

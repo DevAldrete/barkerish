@@ -15,7 +15,7 @@ export const BASE_STYLES = css`
   input:focus-visible,
   select:focus-visible,
   [tabindex]:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--erd-accent);
     outline-offset: 1px;
   }
 `;

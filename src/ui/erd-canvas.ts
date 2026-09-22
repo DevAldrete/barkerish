@@ -32,7 +32,7 @@ export class ErdCanvas extends StoreElement {
     :host {
       display: block;
       position: relative;
-      background: #f8fafc;
+      background: var(--erd-bg);
     }
 
     .canvas {
@@ -58,7 +58,7 @@ export class ErdCanvas extends StoreElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #94a3b8;
+      color: var(--erd-text-subtle);
       font-size: 0.9rem;
       pointer-events: none;
     }

@@ -26,7 +26,7 @@ const PANEL_STYLES = css`
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #64748b;
+    color: var(--erd-text-muted);
   }
 
   .field {
@@ -34,7 +34,7 @@ const PANEL_STYLES = css`
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.75rem;
-    color: #475569;
+    color: var(--erd-text-muted);
   }
 
   input[type='text'],
@@ -44,26 +44,26 @@ const PANEL_STYLES = css`
     width: 100%;
     min-width: 0;
     padding: 0.35rem 0.5rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--erd-border-strong);
     border-radius: 6px;
-    color: #0f172a;
-    background: #ffffff;
+    color: var(--erd-text);
+    background: var(--erd-surface);
   }
 
   .end {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--erd-border);
     border-radius: 8px;
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
-    background: #ffffff;
+    background: var(--erd-surface);
   }
 
   .end__title {
     font-size: 0.72rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--erd-text);
   }
 
   .grid-2 {
@@ -77,14 +77,14 @@ const PANEL_STYLES = css`
     align-items: center;
     gap: 0.35rem;
     font-size: 0.78rem;
-    color: #475569;
+    color: var(--erd-text-muted);
   }
 
   .sentences {
     font-size: 0.75rem;
     line-height: 1.4;
-    color: #475569;
-    background: #f1f5f9;
+    color: var(--erd-text-muted);
+    background: var(--erd-surface-2);
     border-radius: 8px;
     padding: 0.55rem 0.65rem;
     margin: 0;
@@ -97,16 +97,20 @@ const PANEL_STYLES = css`
     font: inherit;
     font-size: 0.78rem;
     padding: 0.3rem 0.55rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--erd-border-strong);
     border-radius: 6px;
-    background: #f8fafc;
+    background: var(--erd-surface-2);
     color: inherit;
     cursor: pointer;
   }
 
+  button:hover:not(:disabled) {
+    background: var(--erd-border);
+  }
+
   button.danger {
-    border-color: #fecaca;
-    color: #b91c1c;
+    border-color: var(--erd-danger-soft);
+    color: var(--erd-danger);
   }
 `;
 
