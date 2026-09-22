@@ -115,6 +115,7 @@ export class DiagramList extends LitElement {
               <button
                 class="delete"
                 title="Delete diagram"
+                aria-label="Delete diagram"
                 @click=${() => this.#emit('delete', diagram.id)}
               >
                 ✕
