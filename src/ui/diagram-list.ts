@@ -10,10 +10,9 @@ export class DiagramList extends LitElement {
 
     :host {
       display: block;
-      height: 100%;
       overflow: auto;
       background: var(--erd-surface);
-      border-right: 1px solid var(--erd-border);
+      color: var(--erd-text);
     }
 
     .head {

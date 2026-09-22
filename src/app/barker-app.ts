@@ -15,6 +15,7 @@ import '../ui/diagram-list.js';
 import '../ui/erd-canvas.js';
 import '../ui/erd-toolbar.js';
 import '../ui/entity-inspector.js';
+import '../ui/entity-list.js';
 import '../ui/relationship-inspector.js';
 import '../ui/zoom-controls.js';
 import type { ErdCanvas } from '../ui/erd-canvas.js';
@@ -42,8 +43,23 @@ export class BarkerApp extends StoreElement {
     }
 
     .documents {
-      width: 14rem;
+      width: 15rem;
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--erd-border);
+      background: var(--erd-surface);
+    }
+
+    diagram-list {
+      flex: 0 1 auto;
+      max-height: 45%;
+      border-bottom: 1px solid var(--erd-border);
+    }
+
+    entity-list {
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     .workspace {
@@ -163,6 +179,14 @@ export class BarkerApp extends StoreElement {
               @open=${(event: CustomEvent<string>) => this.#manager.open(event.detail)}
               @delete=${(event: CustomEvent<string>) => this.#manager.remove(event.detail)}
             ></diagram-list>
+            <entity-list
+              .entities=${diagram.entities}
+              .selectedId=${selection?.kind === 'entity' ? selection.id : null}
+              @select=${this.#onEntitySelect}
+              @edit=${this.#onEntityEdit}
+              @fit=${this.#onEntityFit}
+              @delete=${this.#onEntityDelete}
+            ></entity-list>
           </aside>
           <main class="workspace">
             <erd-canvas
@@ -266,6 +290,23 @@ export class BarkerApp extends StoreElement {
     event: CustomEvent<{ kind: 'entity' | 'relationship'; id: string }>,
   ): void => {
     void this.#focusInspector(event.detail.kind);
+  };
+
+  #onEntitySelect = (event: CustomEvent<string>): void => {
+    this.store.select({ kind: 'entity', id: event.detail });
+  };
+
+  #onEntityEdit = (event: CustomEvent<string>): void => {
+    this.store.select({ kind: 'entity', id: event.detail });
+    void this.#focusInspector('entity');
+  };
+
+  #onEntityFit = (event: CustomEvent<string>): void => {
+    this.canvas.zoomToEntity(event.detail);
+  };
+
+  #onEntityDelete = (event: CustomEvent<string>): void => {
+    this.store.dispatch({ type: 'DeleteEntity', entityId: event.detail });
   };
 
   async #focusInspector(kind: 'entity' | 'relationship'): Promise<void> {
