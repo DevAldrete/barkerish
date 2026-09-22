@@ -1,6 +1,5 @@
 import type { Diagram } from '../domain/types.js';
-import { DslError } from './ast.js';
-import type { ParsedDiagram, ParsedDocument } from './ast.js';
+import type { DslError, ParsedDiagram, ParsedDocument } from './ast.js';
 import { compileDiagram } from './compile.js';
 
 export interface ReconcileResult {
