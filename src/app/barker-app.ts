@@ -1,21 +1,18 @@
 import { css, html, nothing } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { createDiagram, createRelationship, createRelationshipEnd } from '../domain/model.js';
-import { serializeDocument } from '../dsl/index.js';
 import type { DslError } from '../dsl/index.js';
 import { downloadText } from '../io/download.js';
 import { createRepository } from '../persistence/create-repository.js';
 import { parseDiagramFile, serializeDiagram } from '../persistence/native-format.js';
 import { serializeDiagramSvg } from '../render/svg-export.js';
 import { addEntity } from '../store/actions.js';
-import { applyDocument, planDocument } from '../store/apply-document.js';
 import { DocumentManager } from '../store/document-manager.js';
 import { EditorStore } from '../store/editor-store.js';
 import { applyTheme, DEFAULT_THEME, loadTheme, saveTheme } from '../theme/themes.js';
 import type { ThemeId } from '../theme/themes.js';
 import { StoreElement } from '../ui/store-element.js';
 import '../ui/diagram-list.js';
-import '../ui/dsl-editor.js';
 import '../ui/erd-canvas.js';
 import '../ui/erd-toolbar.js';
 import '../ui/entity-inspector.js';
@@ -133,6 +130,7 @@ export class BarkerApp extends StoreElement {
   @state() private dslStatus = '';
 
   readonly #manager: DocumentManager;
+  #dslEditorLoaded: Promise<unknown> | undefined;
 
   constructor() {
     super();
@@ -310,13 +308,33 @@ export class BarkerApp extends StoreElement {
   }
 
   #toggleText = (): void => {
-    this.textOpen = !this.textOpen;
     if (this.textOpen) {
-      void this.#loadDslText();
+      this.textOpen = false;
+      return;
     }
+    void this.#openText().catch((error: unknown) => {
+      console.error('Failed to open the text editor', error);
+    });
   };
 
+  async #openText(): Promise<void> {
+    await this.#loadDslEditor();
+    await this.#loadDslText();
+    this.dslStatus = 'Ctrl/Cmd + Enter to apply.';
+    this.textOpen = true;
+  }
+
+  /** Load the DSL editor on demand so it stays out of the initial bundle. */
+  #loadDslEditor(): Promise<unknown> {
+    this.#dslEditorLoaded ??= import('../ui/dsl-editor.js').catch((error: unknown) => {
+      this.#dslEditorLoaded = undefined;
+      throw error;
+    });
+    return this.#dslEditorLoaded;
+  }
+
   async #loadDslText(): Promise<void> {
+    const { serializeDocument } = await import('../dsl/index.js');
     const diagrams = await this.#manager.loadAll();
     this.dslText = serializeDocument(diagrams);
     this.dslErrors = [];
@@ -333,6 +351,7 @@ export class BarkerApp extends StoreElement {
   };
 
   async #applyDsl(text: string): Promise<void> {
+    const { planDocument, applyDocument } = await import('../store/apply-document.js');
     const plan = await planDocument(text, this.#manager);
     if (plan.errors.length > 0) {
       this.dslErrors = plan.errors;

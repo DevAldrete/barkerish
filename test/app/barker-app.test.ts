@@ -15,6 +15,18 @@ async function mountApp(): Promise<BarkerApp> {
   return app;
 }
 
+async function waitFor(app: BarkerApp, selector: string): Promise<Element> {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const found = app.shadowRoot?.querySelector(selector);
+    if (found) {
+      return found;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await app.updateComplete;
+  }
+  throw new Error(`Timed out waiting for ${selector}.`);
+}
+
 describe('<barker-app>', () => {
   let element: BarkerApp | undefined;
 
@@ -96,20 +108,21 @@ describe('<barker-app>', () => {
     );
     textButton!.click();
     await element.updateComplete;
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await element.updateComplete;
 
-    const editor = element.shadowRoot!.querySelector('dsl-editor') as HTMLElement & {
-      updateComplete: Promise<unknown>;
-    };
-    expect(editor).toBeTruthy();
+    const editor = (await waitFor(element, 'dsl-editor')) as HTMLElement;
 
     editor.dispatchEvent(
       new CustomEvent('apply', {
         detail: `diagram "${name}" { entity Customer { id: integer pk } }`,
       }),
     );
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    for (
+      let attempt = 0;
+      attempt < 50 && !element.store.diagram.entities.some((entity) => entity.name === 'Customer');
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     await element.updateComplete;
 
     expect(element.store.diagram.entities.map((entity) => entity.name)).toContain('Customer');
