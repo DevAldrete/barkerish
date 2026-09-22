@@ -7,6 +7,7 @@ import { entityBox } from '../notation/geometry.js';
 import { renderScene } from '../render/scene.js';
 import { SVG_STYLES } from '../render/svg-styles.js';
 import { deleteSelection } from '../store/actions.js';
+import { BASE_STYLES } from './base-styles.js';
 import { StoreElement } from './store-element.js';
 import { clampZoom, panBy, screenToWorld, zoomAt } from './viewport.js';
 
@@ -25,6 +26,7 @@ const FIT_PADDING = 48;
 @customElement('erd-canvas')
 export class ErdCanvas extends StoreElement {
   static override styles = css`
+    ${BASE_STYLES}
     ${SVG_STYLES}
 
     :host {
@@ -92,6 +94,7 @@ export class ErdCanvas extends StoreElement {
         @pointercancel=${this.#onPointerUp}
         @wheel=${this.#onWheel}
         @contextmenu=${this.#onContextMenu}
+        @dblclick=${this.#onDoubleClick}
       >
         <g transform="translate(${x} ${y}) scale(${zoom})">${renderScene(diagram, selection)}</g>
       </svg>
@@ -109,6 +112,15 @@ export class ErdCanvas extends StoreElement {
 
   zoomOut(): void {
     this.#zoomBy(1 / 1.2);
+  }
+
+  /** Set an absolute zoom level, keeping the canvas centre fixed. */
+  setZoom(zoom: number): void {
+    const current = this.store.diagram.layout.viewport.zoom;
+    if (current === 0) {
+      return;
+    }
+    this.#zoomBy(zoom / current);
   }
 
   zoomToFit(): void {
@@ -294,8 +306,31 @@ export class ErdCanvas extends StoreElement {
     event.preventDefault();
   };
 
+  #onDoubleClick = (event: MouseEvent): void => {
+    const target = event.target as Element;
+    const entityElement = target.closest('[data-entity-id]');
+    const relationshipElement = target.closest('[data-relationship-id]');
+
+    if (entityElement) {
+      const entityId = entityElement.getAttribute('data-entity-id');
+      if (entityId) {
+        this.store.select({ kind: 'entity', id: entityId });
+        this.#emit('edit-selection', { kind: 'entity', id: entityId });
+      }
+      return;
+    }
+
+    if (relationshipElement) {
+      const relationshipId = relationshipElement.getAttribute('data-relationship-id');
+      if (relationshipId) {
+        this.store.select({ kind: 'relationship', id: relationshipId });
+        this.#emit('edit-selection', { kind: 'relationship', id: relationshipId });
+      }
+    }
+  };
+
   #onKeyDown = (event: KeyboardEvent): void => {
-    if (isEditableTarget(event.target)) {
+    if (isEditableTarget(event)) {
       return;
     }
 
@@ -334,13 +369,20 @@ export class ErdCanvas extends StoreElement {
   }
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  const element = target as HTMLElement | null;
-  if (!element) {
-    return false;
+/**
+ * Whether the event originated inside a text-editable control. Uses the composed
+ * path because listeners on `window` see the shadow host, not the inner input.
+ */
+export function isEditableTarget(event: Event): boolean {
+  for (const node of event.composedPath()) {
+    if (node instanceof HTMLElement) {
+      const tag = node.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || node.isContentEditable) {
+        return true;
+      }
+    }
   }
-  const tag = element.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || element.isContentEditable;
+  return false;
 }
 
 declare global {
