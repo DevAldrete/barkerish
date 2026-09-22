@@ -5,6 +5,7 @@ import type {
   Entity,
   EntityLayout,
   GridSettings,
+  Layout,
   Relationship,
   Viewport,
 } from './types.js';
@@ -29,6 +30,13 @@ export type Command =
   | { type: 'CreateRelationship'; relationship: Relationship }
   | { type: 'UpdateRelationship'; relationshipId: Id; patch: RelationshipPatch }
   | { type: 'DeleteRelationship'; relationshipId: Id }
+  | {
+      type: 'ReplaceModel';
+      name: string;
+      entities: Entity[];
+      relationships: Relationship[];
+      layout: Layout;
+    }
   | { type: 'RenameDiagram'; name: string }
   | { type: 'SetViewport'; viewport: Viewport }
   | { type: 'SetGrid'; patch: Partial<GridSettings> };
@@ -144,6 +152,15 @@ export function applyCommand(diagram: Diagram, command: Command): Diagram {
         relationships: diagram.relationships.filter(
           (relationship) => relationship.id !== command.relationshipId,
         ),
+      };
+
+    case 'ReplaceModel':
+      return {
+        ...diagram,
+        name: command.name,
+        entities: command.entities,
+        relationships: command.relationships,
+        layout: command.layout,
       };
 
     case 'RenameDiagram':

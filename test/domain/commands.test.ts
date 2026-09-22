@@ -77,6 +77,29 @@ describe('applyCommand', () => {
     expect(diagram.layout.entities['e1']).toEqual({ x: 5, y: 6, width: 300 });
   });
 
+  it('replaces the model and layout wholesale', () => {
+    const original = fixture();
+    const invoice = createEntity({ id: 'e9', name: 'Invoice', attributes: [] });
+
+    const diagram = applyCommand(original, {
+      type: 'ReplaceModel',
+      name: 'Renamed',
+      entities: [invoice],
+      relationships: [],
+      layout: {
+        entities: { e9: createEntityLayout({ x: 1, y: 2 }) },
+        viewport: original.layout.viewport,
+        grid: original.layout.grid,
+      },
+    });
+
+    expect(diagram.id).toBe(original.id);
+    expect(diagram.name).toBe('Renamed');
+    expect(diagram.entities).toEqual([invoice]);
+    expect(diagram.relationships).toEqual([]);
+    expect(diagram.layout.entities['e9']).toEqual({ x: 1, y: 2, width: 220 });
+  });
+
   it('deletes an entity, its layout and its relationships', () => {
     let diagram = applyCommand(fixture(), relationshipCommand());
     diagram = applyCommand(diagram, { type: 'DeleteEntity', entityId: 'e1' });
