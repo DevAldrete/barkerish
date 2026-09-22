@@ -14,7 +14,10 @@ import '../ui/erd-canvas.js';
 import '../ui/erd-toolbar.js';
 import '../ui/entity-inspector.js';
 import '../ui/relationship-inspector.js';
+import '../ui/zoom-controls.js';
 import type { ErdCanvas } from '../ui/erd-canvas.js';
+import type { EntityInspector } from '../ui/entity-inspector.js';
+import type { RelationshipInspector } from '../ui/relationship-inspector.js';
 
 @customElement('barker-app')
 export class BarkerApp extends StoreElement {
@@ -81,6 +84,8 @@ export class BarkerApp extends StoreElement {
   `;
 
   @query('erd-canvas') private canvas!: ErdCanvas;
+  @query('entity-inspector') private entityInspector!: EntityInspector;
+  @query('relationship-inspector') private relationshipInspector!: RelationshipInspector;
 
   /** undefined = not connecting, null = picking source, string = picking target. */
   @state() private connectFrom: string | null | undefined = undefined;
@@ -123,9 +128,6 @@ export class BarkerApp extends StoreElement {
           @toggle-connect=${this.#toggleConnect}
           @undo=${() => this.store.undo()}
           @redo=${() => this.store.redo()}
-          @zoom-in=${() => this.canvas.zoomIn()}
-          @zoom-out=${() => this.canvas.zoomOut()}
-          @zoom-fit=${() => this.canvas.zoomToFit()}
           @toggle-grid=${() =>
             this.store.dispatch(
               { type: 'SetGrid', patch: { visible: !diagram.layout.grid.visible } },
@@ -158,12 +160,20 @@ export class BarkerApp extends StoreElement {
               .connectMode=${this.connectFrom !== undefined}
               @entity-pick=${this.#onEntityPick}
               @connect-cancel=${this.#cancelConnect}
+              @edit-selection=${this.#onEditSelection}
             ></erd-canvas>
             ${
               this.connectFrom === undefined
                 ? nothing
                 : html`<div class="hint">${this.#hintText()}</div>`
             }
+            <zoom-controls
+              .zoom=${diagram.layout.viewport.zoom}
+              @zoom-in=${() => this.canvas.zoomIn()}
+              @zoom-out=${() => this.canvas.zoomOut()}
+              @zoom-fit=${() => this.canvas.zoomToFit()}
+              @zoom=${(event: CustomEvent<number>) => this.canvas.setZoom(event.detail)}
+            ></zoom-controls>
           </main>
           <aside class="sidebar">
             ${
@@ -235,6 +245,23 @@ export class BarkerApp extends StoreElement {
   #cancelConnect = (): void => {
     this.connectFrom = undefined;
   };
+
+  #onEditSelection = (
+    event: CustomEvent<{ kind: 'entity' | 'relationship'; id: string }>,
+  ): void => {
+    void this.#focusInspector(event.detail.kind);
+  };
+
+  async #focusInspector(kind: 'entity' | 'relationship'): Promise<void> {
+    await this.updateComplete;
+    if (kind === 'entity') {
+      await this.entityInspector.updateComplete;
+      this.entityInspector.focusPrimaryField();
+    } else {
+      await this.relationshipInspector.updateComplete;
+      this.relationshipInspector.focusPrimaryField();
+    }
+  }
 
   #onEntityPick = (event: CustomEvent<string>): void => {
     const entityId = event.detail;
